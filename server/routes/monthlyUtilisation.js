@@ -33,13 +33,13 @@ router.post("/", (req, res) => {
 
     openingKm,
     closingKm,
-    diffKm,
+    differenceKm,
     targetKm,
     kmUtilisation,
 
     openingHours,
     closingHours,
-    diffHours,
+    differenceHours,
     targetHours,
     hoursUtilisation,
 
@@ -47,8 +47,7 @@ router.post("/", (req, res) => {
   } = req.body;
 
   db.run(
-    `
-    INSERT INTO monthly_utilisation
+    `INSERT INTO monthly_utilisation
     (
       utilisationMonth,
 
@@ -58,20 +57,20 @@ router.post("/", (req, res) => {
 
       openingKm,
       closingKm,
-      diffKm,
+      differenceKm,
       targetKm,
       kmUtilisation,
 
       openingHours,
       closingHours,
-      diffHours,
+      differenceHours,
       targetHours,
       hoursUtilisation,
 
       remarks
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
+    VALUES
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       utilisationMonth,
 
@@ -81,13 +80,13 @@ router.post("/", (req, res) => {
 
       openingKm,
       closingKm,
-      diffKm,
+      differenceKm,
       targetKm,
       kmUtilisation,
 
       openingHours,
       closingHours,
-      diffHours,
+      differenceHours,
       targetHours,
       hoursUtilisation,
 
@@ -120,13 +119,13 @@ router.put("/:id", (req, res) => {
 
     openingKm,
     closingKm,
-    diffKm,
+    differenceKm,
     targetKm,
     kmUtilisation,
 
     openingHours,
     closingHours,
-    diffHours,
+    differenceHours,
     targetHours,
     hoursUtilisation,
 
@@ -134,8 +133,7 @@ router.put("/:id", (req, res) => {
   } = req.body;
 
   db.run(
-    `
-    UPDATE monthly_utilisation SET
+    `UPDATE monthly_utilisation SET
 
       utilisationMonth=?,
 
@@ -145,20 +143,19 @@ router.put("/:id", (req, res) => {
 
       openingKm=?,
       closingKm=?,
-      diffKm=?,
+      differenceKm=?,
       targetKm=?,
       kmUtilisation=?,
 
       openingHours=?,
       closingHours=?,
-      diffHours=?,
+      differenceHours=?,
       targetHours=?,
       hoursUtilisation=?,
 
       remarks=?
 
-    WHERE id=?
-    `,
+      WHERE id=?`,
     [
       utilisationMonth,
 
@@ -168,13 +165,13 @@ router.put("/:id", (req, res) => {
 
       openingKm,
       closingKm,
-      diffKm,
+      differenceKm,
       targetKm,
       kmUtilisation,
 
       openingHours,
       closingHours,
-      diffHours,
+      differenceHours,
       targetHours,
       hoursUtilisation,
 

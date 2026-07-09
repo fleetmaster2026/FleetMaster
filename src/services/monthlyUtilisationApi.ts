@@ -2,9 +2,9 @@ import type { MonthlyUtilisation } from "../types/MonthlyUtilisation";
 
 const API_URL = "http://localhost:5000/api/monthly-utilisation";
 
-// ============================
-// GET ALL
-// ============================
+// =======================
+// GET
+// =======================
 export const getMonthlyUtilisations = async (): Promise<
   MonthlyUtilisation[]
 > => {
@@ -12,9 +12,9 @@ export const getMonthlyUtilisations = async (): Promise<
   return response.json();
 };
 
-// ============================
+// =======================
 // ADD
-// ============================
+// =======================
 export const addMonthlyUtilisation = async (
   data: Omit<MonthlyUtilisation, "id">
 ) => {
@@ -29,9 +29,9 @@ export const addMonthlyUtilisation = async (
   return response.json();
 };
 
-// ============================
+// =======================
 // UPDATE
-// ============================
+// =======================
 export const updateMonthlyUtilisation = async (
   id: number,
   data: Omit<MonthlyUtilisation, "id">
@@ -47,9 +47,9 @@ export const updateMonthlyUtilisation = async (
   return response.json();
 };
 
-// ============================
+// =======================
 // DELETE
-// ============================
+// =======================
 export const deleteMonthlyUtilisation = async (id: number) => {
   const response = await fetch(`${API_URL}/${id}`, {
     method: "DELETE",

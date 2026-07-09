@@ -78,11 +78,10 @@ db.run(`
 // =========================
 // MONTHLY UTILISATION TABLE
 // =========================
-// =========================
-// MONTHLY UTILISATION TABLE
-// =========================
+
 db.run(`
-  CREATE TABLE IF NOT EXISTS monthly_utilisation (
+CREATE TABLE IF NOT EXISTS monthly_utilisation (
+
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
     utilisationMonth TEXT,
@@ -91,20 +90,20 @@ db.run(`
     site TEXT,
     engineer TEXT,
 
-    openingKm INTEGER,
-    closingKm INTEGER,
-    diffKm INTEGER,
-    targetKm INTEGER,
+    openingKm REAL,
+    closingKm REAL,
+    differenceKm REAL,
+    targetKm REAL,
     kmUtilisation REAL,
 
-    openingHours INTEGER,
-    closingHours INTEGER,
-    diffHours INTEGER,
-    targetHours INTEGER,
+    openingHours REAL,
+    closingHours REAL,
+    differenceHours REAL,
+    targetHours REAL,
     hoursUtilisation REAL,
 
     remarks TEXT
-  )
+)
 `);
 });
 
