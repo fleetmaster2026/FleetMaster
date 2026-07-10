@@ -25,28 +25,30 @@ const MonthlyUtilisation = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [search, setSearch] = useState("");
+  const emptyForm: MonthlyUtilisation = {
+  utilisationMonth: "",
 
-  const [formData, setFormData] = useState<MonthlyUtilisation>({
-    utilisationMonth: "",
+  vehicleNo: "",
+  site: "",
+  engineer: "",
 
-    vehicleNo: "",
-    site: "",
-    engineer: "",
+  openingKm: 0,
+  closingKm: 0,
+  differenceKm: 0,
+  targetKm: 0,
+  kmUtilisation: 0,
 
-    openingKm: 0,
-    closingKm: 0,
-    differenceKm: 0,
-    targetKm: 0,
-    kmUtilisation: 0,
+  openingHours: 0,
+  closingHours: 0,
+  differenceHours: 0,
+  targetHours: 0,
+  hoursUtilisation: 0,
 
-    openingHours: 0,
-    closingHours: 0,
-    differenceHours: 0,
-    targetHours: 0,
-    hoursUtilisation: 0,
+  remarks: "",
+};
 
-    remarks: "",
-  });
+const [formData, setFormData] =
+  useState<MonthlyUtilisation>(emptyForm);
 
   // ============================================
   // LOAD DATA
@@ -177,6 +179,35 @@ const MonthlyUtilisation = () => {
     if (value >= 41) return "badge orange";
     return "badge red";
   };
+  const clearForm = () => {
+  setFormData(emptyForm);
+  setEditingId(null);
+};
+const handleSave = async () => {
+  if (!formData.utilisationMonth) {
+    alert("Select Month");
+    return;
+  }
+
+  if (!formData.vehicleNo) {
+    alert("Select Vehicle");
+    return;
+  }
+
+  try {
+    await addMonthlyUtilisation(formData);
+
+    await loadData();
+
+    clearForm();
+
+    alert("Record Saved Successfully");
+  } catch (error) {
+    console.error(error);
+
+    alert("Unable to Save Record");
+  }
+};
 
   // ============================================
   // PART 2 STARTS HERE
@@ -445,6 +476,7 @@ const MonthlyUtilisation = () => {
       <button
         type="button"
         className="save-btn"
+        onClick={handleSave}
       >
         Save
       </button>
@@ -459,6 +491,7 @@ const MonthlyUtilisation = () => {
       <button
         type="button"
         className="clear-btn"
+        onClick={clearForm}
       >
         Clear
       </button>
