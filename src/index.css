@@ -51,12 +51,10 @@
 }
 
 #root {
-  width: 1126px;
+  width: 100%;
   max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  margin: 0;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -108,4 +106,109 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* =========================
+   RTA STATUS BADGES
+========================= */
+
+.badge-green,
+.badge-orange,
+.badge-red,
+.badge-gray {
+  display: inline-block;
+  min-width: 110px;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge-green {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.badge-orange {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fdba74;
+}
+
+.badge-red {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.badge-gray {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.data-table th,
+.data-table td {
+  padding: 10px;
+  text-align: center;
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+.data-table small {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+}
+/* =========================
+   SUMMARY CARDS
+========================= */
+
+.summary-cards {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.summary-card {
+  flex: 1;
+  min-width: 180px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.summary-card h4 {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.summary-card h2 {
+  margin-top: 8px;
+  font-size: 28px;
+}
+
+.summary-card.expired {
+  border-left: 5px solid #dc3545;
+}
+
+.summary-card.warning {
+  border-left: 5px solid #fd7e14;
+}
+
+.summary-card.valid {
+  border-left: 5px solid #28a745;
 }

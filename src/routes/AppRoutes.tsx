@@ -11,6 +11,7 @@ import EngineerMaster from "../pages/EngineerMaster";
 import MonthlyUtilisation from "../pages/MonthlyUtilisation";
 import UtilisationReport from "../pages/UtilisationReport";
 import Settings from "../pages/Settings";
+import RtaDocuments from "../pages/RtaDocuments";
 
 const AppRoutes = () => {
   return (
@@ -38,7 +39,7 @@ const AppRoutes = () => {
           <Route path="/settings" element={<Settings />} />
 
           {/* Coming Soon */}
-          <Route path="/documents" element={<h2>RTA Documents</h2>} />
+          <Route path="/documents" element={<RtaDocuments />} />
           <Route path="/breakdowns" element={<h2>Breakdown Register</h2>} />
           <Route path="/fines" element={<h2>Fine Register</h2>} />
         </Route>

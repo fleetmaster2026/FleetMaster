@@ -34,7 +34,7 @@ router.post("/", (req, res) => {
     fitnessExpiry,
     permitExpiry,
     pollutionExpiry,
-
+    taxExpiry,
     remarks,
   } = req.body;
 
@@ -50,10 +50,10 @@ router.post("/", (req, res) => {
       fitnessExpiry,
       permitExpiry,
       pollutionExpiry,
-
+      taxExpiry,
       remarks
     )
-    VALUES (?,?,?,?,?,?,?,?,?)`,
+    VALUES (?,?,?,?,?,?,?,?,?,?)`,
     [
       vehicleNo,
       site,
@@ -64,7 +64,7 @@ router.post("/", (req, res) => {
       fitnessExpiry,
       permitExpiry,
       pollutionExpiry,
-
+      taxExpiry,
       remarks,
     ],
     function (err) {
@@ -96,7 +96,7 @@ router.put("/:id", (req, res) => {
     fitnessExpiry,
     permitExpiry,
     pollutionExpiry,
-
+    taxExpiry,
     remarks,
   } = req.body;
 
@@ -112,7 +112,7 @@ router.put("/:id", (req, res) => {
       fitnessExpiry=?,
       permitExpiry=?,
       pollutionExpiry=?,
-
+      taxExpiry=?,
       remarks=?
 
      WHERE id=?`,
@@ -126,7 +126,7 @@ router.put("/:id", (req, res) => {
       fitnessExpiry,
       permitExpiry,
       pollutionExpiry,
-
+      taxExpiry,
       remarks,
 
       id,

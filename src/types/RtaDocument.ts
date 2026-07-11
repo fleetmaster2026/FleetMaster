@@ -10,6 +10,7 @@ export interface RtaDocument {
   fitnessExpiry: string;
   permitExpiry: string;
   pollutionExpiry: string;
+  taxExpiry: string;
 
   remarks: string;
 }

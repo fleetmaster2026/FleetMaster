@@ -123,7 +123,6 @@ CREATE TABLE IF NOT EXISTS rta_documents (
     fitnessExpiry TEXT,
     permitExpiry TEXT,
     pollutionExpiry TEXT,
-
     remarks TEXT
 )
 `);
