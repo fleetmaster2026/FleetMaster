@@ -6,7 +6,7 @@ const vehicleRoutes = require("./routes/vehicles");
 const siteRoutes = require("./routes/sites");
 const engineerRoutes = require("./routes/engineers");
 const monthlyUtilisationRoutes = require("./routes/monthlyUtilisation");
-
+const rtaDocumentRoutes = require("./routes/rtaDocuments");
 console.log("✅ Engineer routes imported:", engineerRoutes);
 
 const app = express();
@@ -18,7 +18,7 @@ app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/sites", siteRoutes);
 app.use("/api/engineers", engineerRoutes);
 app.use("/api/monthly-utilisation", monthlyUtilisationRoutes);
-
+app.use("/api/rta-documents", rtaDocumentRoutes);
 app.get("/", (req, res) => {
   res.send("FleetMaster API Running");
 });

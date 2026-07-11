@@ -1,3 +1,11 @@
+import {
+  FaEdit,
+  FaTrash,
+  FaSearch,
+  FaSave,
+  FaSyncAlt,
+  FaTimes,
+} from "react-icons/fa";
 import { useEffect, useState } from "react";
 
 import type { MonthlyUtilisation } from "../types/MonthlyUtilisation";
@@ -195,20 +203,57 @@ const handleSave = async () => {
   }
 
   try {
-    await addMonthlyUtilisation(formData);
+    if (editingId === null) {
+      // SAVE NEW RECORD
+      await addMonthlyUtilisation(formData);
+
+      alert("Record Saved Successfully");
+    } else {
+      // UPDATE EXISTING RECORD
+      await updateMonthlyUtilisation(
+        editingId,
+        formData
+      );
+
+      alert("Record Updated Successfully");
+    }
 
     await loadData();
 
     clearForm();
-
-    alert("Record Saved Successfully");
   } catch (error) {
     console.error(error);
 
     alert("Unable to Save Record");
   }
 };
+const filteredRecords = records.filter((record) =>
+  record.vehicleNo.toLowerCase().includes(search.toLowerCase())
+);
+const handleEdit = (record: MonthlyUtilisation) => {
+  setEditingId(record.id!);
+  setFormData(record);
 
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+};
+const handleDelete = async (id: number) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this record?"
+  );
+
+  if (!confirmDelete) return;
+
+  await deleteMonthlyUtilisation(id);
+
+  await loadData();
+
+  if (editingId === id) {
+    clearForm();
+  }
+};
   // ============================================
   // PART 2 STARTS HERE
   // ============================================
@@ -375,7 +420,7 @@ const handleSave = async () => {
         <label>KM Utilisation %</label>
 
         <div className={getBadgeClass(formData.kmUtilisation)}>
-          {formData.kmUtilisation.toFixed(2)}%
+          {Math.min(formData.kmUtilisation,100).toFixed(2)}%
         </div>
       </div>
 
@@ -446,7 +491,7 @@ const handleSave = async () => {
         <label>Hours Utilisation %</label>
 
         <div className={getBadgeClass(formData.hoursUtilisation)}>
-          {formData.hoursUtilisation.toFixed(2)}%
+          {Math.min(formData.hoursUtilisation,100).toFixed(2)}%
         </div>
       </div>
 
@@ -473,30 +518,47 @@ const handleSave = async () => {
 
     <div className="button-group">
 
+  {editingId === null ? (
+    <>
       <button
-        type="button"
         className="save-btn"
         onClick={handleSave}
       >
-        Save
+        <FaSave />
+        &nbsp; Save
       </button>
 
       <button
-        type="button"
-        className="update-btn"
-      >
-        Update
-      </button>
-
-      <button
-        type="button"
         className="clear-btn"
         onClick={clearForm}
       >
-        Clear
+        <FaTimes />
+        &nbsp; Clear
+      </button>
+    </>
+  ) : (
+    <>
+      <button
+        className="update-btn"
+        onClick={handleSave}
+      >
+        <FaSyncAlt />
+        &nbsp; Update
       </button>
 
-    </div>
+      <button
+        className="clear-btn"
+        onClick={clearForm}
+      >
+        <FaTimes />
+        &nbsp; Cancel
+      </button>
+    </>
+  )}
+
+</div>
+
+
   </div>
 
   {/* PART 5 STARTS BELOW */}
@@ -507,18 +569,19 @@ const handleSave = async () => {
       <label>Search Vehicle</label>
 
       <input
-        type="text"
-        placeholder="Search by Vehicle No..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+  type="text"
+  placeholder="Search by Vehicle No..."
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+/>
     </div>
   </div>
 
   {/* ================= RECORDS TABLE ================= */}
-
-  <div className="form-card">
-    <h2 className="section-title">Monthly Utilisation Records</h2>
+<div className="form-card">
+<h2 className="section-title">
+Monthly Utilisation Records
+</h2>
 
     <table className="data-table">
       <thead>
@@ -530,6 +593,7 @@ const handleSave = async () => {
           <th>KM %</th>
           <th>Hours %</th>
           <th>Remarks</th>
+          <th>Actions</th>
         </tr>
       </thead>
 
@@ -548,18 +612,35 @@ const handleSave = async () => {
               <td>{item.engineer}</td>
 
               <td>
-                <span className={getBadgeClass(item.kmUtilisation)}>
-                  {item.kmUtilisation.toFixed(2)}%
+                <span className={getBadgeClass(Math.min(item.kmUtilisation, 100))}>
+                  {Math.min(item.kmUtilisation,100).toFixed(2)}%
                 </span>
               </td>
 
               <td>
-                <span className={getBadgeClass(item.hoursUtilisation)}>
-                  {item.hoursUtilisation.toFixed(2)}%
+                <span className={getBadgeClass(Math.min(item.hoursUtilisation, 100))}>
+                  {Math.min(item.hoursUtilisation,100).toFixed(2)}%
                 </span>
               </td>
 
               <td>{item.remarks}</td>
+              <td>
+
+<button
+className="icon-btn edit-btn"
+onClick={() => handleEdit(item)}
+>
+✏️
+</button>
+
+<button
+className="icon-btn delete-btn"
+onClick={() => handleDelete(item.id!)}
+>
+🗑️
+</button>
+
+</td>
             </tr>
           ))}
       </tbody>

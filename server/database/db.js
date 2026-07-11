@@ -105,6 +105,28 @@ CREATE TABLE IF NOT EXISTS monthly_utilisation (
     remarks TEXT
 )
 `);
+// =========================
+// RTA DOCUMENTS TABLE
+// =========================
+
+db.run(`
+CREATE TABLE IF NOT EXISTS rta_documents (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    vehicleNo TEXT,
+    site TEXT,
+    engineer TEXT,
+
+    rcExpiry TEXT,
+    insuranceExpiry TEXT,
+    fitnessExpiry TEXT,
+    permitExpiry TEXT,
+    pollutionExpiry TEXT,
+
+    remarks TEXT
+)
+`);
 });
 
 module.exports = db;
