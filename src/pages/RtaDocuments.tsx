@@ -38,7 +38,7 @@ const RtaDocuments = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   const [search, setSearch] = useState("");
-
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<RtaDocument>({
@@ -161,9 +161,58 @@ const RtaDocuments = () => {
     }
   };
 
-  const filteredRecords = records.filter((item) =>
-    item.vehicleNo.toLowerCase().includes(search.toLowerCase())
-  );
+const filteredRecords = records.filter((item) => {
+  const matchesSearch = item.vehicleNo
+    .toLowerCase()
+    .includes(search.toLowerCase());
+
+  const dates = [
+    item.rcExpiry,
+    item.insuranceExpiry,
+    item.fitnessExpiry,
+    item.permitExpiry,
+    item.pollutionExpiry,
+    item.taxExpiry,
+  ];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const hasExpired = dates.some((date) => {
+    const expiry = new Date(date);
+    expiry.setHours(0, 0, 0, 0);
+    return expiry <= today;
+  });
+
+  const hasExpiringSoon = dates.some((date) => {
+    const expiry = new Date(date);
+    expiry.setHours(0, 0, 0, 0);
+
+    const diff =
+      (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+
+    return diff > 0 && diff <= 30;
+  });
+
+  const allValid = dates.every((date) => {
+    const expiry = new Date(date);
+    expiry.setHours(0, 0, 0, 0);
+
+    const diff =
+      (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+
+    return diff > 30;
+  });
+
+  if (statusFilter === "EXPIRED") return matchesSearch && hasExpired;
+
+  if (statusFilter === "EXPIRING")
+    return matchesSearch && hasExpiringSoon;
+
+  if (statusFilter === "VALID") return matchesSearch && allValid;
+
+  return matchesSearch;
+});
 const formatDate = (date: string) => {
   if (!date) return "";
 
@@ -470,22 +519,40 @@ filteredRecords.forEach((item) => {
 {/* ================= SUMMARY ================= */}
 
 <div className="summary-cards">
-  <div className="summary-card">
+  <div
+  className={`summary-card ${statusFilter === "ALL" ? "active-card" : ""}`}
+  onClick={() => setStatusFilter("ALL")}
+>
     <h4>Total Documents</h4>
     <h2>{totalDocuments}</h2>
   </div>
 
-  <div className="summary-card expired">
+  <div
+  className={`summary-card expired ${
+    statusFilter === "EXPIRED" ? "active-card" : ""
+  }`}
+  onClick={() => setStatusFilter("EXPIRED")}
+>
     <h4>Expired</h4>
     <h2>{expiredCount}</h2>
   </div>
 
-  <div className="summary-card warning">
+  <div
+  className={`summary-card warning ${
+    statusFilter === "EXPIRING" ? "active-card" : ""
+  }`}
+  onClick={() => setStatusFilter("EXPIRING")}
+>
     <h4>Expiring (30 Days)</h4>
     <h2>{expiringSoonCount}</h2>
   </div>
 
-  <div className="summary-card valid">
+  <div
+  className={`summary-card valid ${
+    statusFilter === "VALID" ? "active-card" : ""
+  }`}
+  onClick={() => setStatusFilter("VALID")}
+>
     <h4>Valid</h4>
     <h2>{validCount}</h2>
   </div>

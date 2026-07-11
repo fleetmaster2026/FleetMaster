@@ -212,3 +212,16 @@ code {
 .summary-card.valid {
   border-left: 5px solid #28a745;
 }
+.summary-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-3px);
+}
+
+.active-card {
+  transform: scale(1.03);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
