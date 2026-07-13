@@ -1,8 +1,11 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
-const db = new sqlite3.Database(
-  path.join(__dirname, "fleetmaster.db"),
+const dbPath = path.join(__dirname, "fleetmaster.db");
+
+console.log("DATABASE PATH:", dbPath);
+
+const db = new sqlite3.Database(dbPath,
   (err) => {
     if (err) {
       console.error("Database Error:", err.message);
@@ -123,6 +126,26 @@ CREATE TABLE IF NOT EXISTS rta_documents (
     fitnessExpiry TEXT,
     permitExpiry TEXT,
     pollutionExpiry TEXT,
+    remarks TEXT
+)
+`);
+// ================= Breakdown Register =================
+
+db.run(`
+CREATE TABLE IF NOT EXISTS breakdowns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    vehicleNo TEXT NOT NULL,
+    site TEXT,
+    engineer TEXT,
+
+    breakdownDate TEXT,
+    breakdownType TEXT,
+    breakdownDescription TEXT,
+
+    requireFund TEXT,
+    estimatedAmount REAL,
+
     remarks TEXT
 )
 `);

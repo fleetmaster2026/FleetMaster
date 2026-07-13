@@ -225,3 +225,93 @@ code {
   transform: scale(1.03);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
+/* =========================
+   Dashboard Attention Scroll
+========================= */
+
+.attention-container {
+  max-height: 300px;
+  overflow: hidden;
+  position: relative;
+}
+
+.attention-scroll {
+  animation: attentionScroll 25s linear infinite;
+}
+
+.attention-container:hover .attention-scroll {
+  animation-play-state: paused;
+}
+
+@keyframes attentionScroll {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-50%);
+  }
+}
+.badge-green {
+  background: #dcfce7;
+  color: #166534;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-gray {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.breakdown-type {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.engine {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.hydraulic {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.electrical {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.transmission {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.tyre {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.battery {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.brake {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.other {
+  background: #e5e7eb;
+  color: #374151;
+}

@@ -12,7 +12,7 @@ import MonthlyUtilisation from "../pages/MonthlyUtilisation";
 import UtilisationReport from "../pages/UtilisationReport";
 import Settings from "../pages/Settings";
 import RtaDocuments from "../pages/RtaDocuments";
-
+import BreakdownRegister from "../pages/BreakdownRegister";
 const AppRoutes = () => {
   return (
     <BrowserRouter>
@@ -40,7 +40,7 @@ const AppRoutes = () => {
 
           {/* Coming Soon */}
           <Route path="/documents" element={<RtaDocuments />} />
-          <Route path="/breakdowns" element={<h2>Breakdown Register</h2>} />
+          <Route path="/breakdowns" element={<BreakdownRegister />} />
           <Route path="/fines" element={<h2>Fine Register</h2>} />
         </Route>
       </Routes>
