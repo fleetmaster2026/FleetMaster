@@ -2,7 +2,7 @@ import axios from "axios";
 
 import type { Vehicle } from "../types/Vehicle";
 
-const API_URL = "http://localhost:5000/api/reports";
+const API_URL = "https://fleetmaster-server.onrender.com/api/reports";
 
 export const getVehicleReport = async (
   params?: {

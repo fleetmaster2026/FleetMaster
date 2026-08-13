@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { RtaDocument } from "../types/RtaDocument";
 
-const API_URL = "http://localhost:5000/api/rta-documents";
+const API_URL = "https://fleetmaster-server.onrender.com/api/rta-documents";
 
 export interface ReminderRunSiteDetail {
   site: string;

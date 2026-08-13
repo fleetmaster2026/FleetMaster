@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { SiteEngineer } from "../types/SiteEngineer";
 
-const API = "http://localhost:5000/api/site-engineers";
+const API = "https://fleetmaster-server.onrender.com/api/site-engineers";
 
 export const getSiteEngineers = async (): Promise<SiteEngineer[]> => {
   const res = await axios.get(API);

@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { BreakdownRecord as Breakdown } from "../types/Breakdown";
 
-const API_URL = "http://localhost:5000/api/breakdowns";
+const API_URL = "https://fleetmaster-server.onrender.com/api/breakdowns";
 
 // ================= GET =================
 

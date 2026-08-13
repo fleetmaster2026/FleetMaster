@@ -22,7 +22,7 @@ const Settings = () => {
 
   const fetchSettings = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/settings");
+      const res = await axios.get("https://fleetmaster-server.onrender.com/api/settings");
 
       setSettings({
         company_name: res.data.company_name || "",
@@ -46,7 +46,7 @@ const Settings = () => {
   const fetchBackups = async () => {
   try {
     const res = await axios.get(
-      "http://localhost:5000/api/database/backups"
+      "https://fleetmaster-server.onrender.com/api/database/backups"
     );
 
     setBackups(res.data);
@@ -93,7 +93,7 @@ useEffect(() => {
   const saveSettings = async () => {
     try {
       await axios.put(
-        "http://localhost:5000/api/settings",
+        "https://fleetmaster-server.onrender.com/api/settings",
         settings
       );
       setTheme(settings.theme as "Light" | "Dark");
@@ -116,7 +116,7 @@ useEffect(() => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/settings/upload-logo",
+        "https://fleetmaster-server.onrender.com/api/settings/upload-logo",
         formData,
         {
           headers: {
@@ -140,7 +140,7 @@ useEffect(() => {
   try {
 
     const res = await axios.get(
-      "http://localhost:5000/api/database/backup"
+      "https://fleetmaster-server.onrender.com/api/database/backup"
     );
 
     alert(res.data.message);
@@ -155,7 +155,7 @@ useEffect(() => {
 const downloadBackup = (fileName: string) => {
 
   window.open(
-    `http://localhost:5000/api/database/download/${encodeURIComponent(fileName)}`,
+    `https://fleetmaster-server.onrender.com/api/database/download/${encodeURIComponent(fileName)}`,
     "_blank"
   );
 
@@ -171,7 +171,7 @@ const deleteBackup = async (fileName: string) => {
   try {
 
     const res = await axios.delete(
-      `http://localhost:5000/api/database/delete/${encodeURIComponent(fileName)}`
+      `https://fleetmaster-server.onrender.com/api/database/delete/${encodeURIComponent(fileName)}`
     );
 
     alert(res.data.message);
@@ -198,7 +198,7 @@ const restoreBackup = async (fileName: string) => {
   try {
 
     const res = await axios.post(
-      `http://localhost:5000/api/database/restore/${encodeURIComponent(fileName)}`
+      `https://fleetmaster-server.onrender.com/api/database/restore/${encodeURIComponent(fileName)}`
     );
 
     alert(res.data.message);
@@ -263,7 +263,7 @@ const restoreBackup = async (fileName: string) => {
                 <div className="mb-3 text-center">
 
                   <img
-                    src={`http://localhost:5000${settings.company_logo}`}
+                    src={`https://fleetmaster-server.onrender.com${settings.company_logo}`}
                     alt="Company Logo"
                     className="img-fluid"
                     style={{

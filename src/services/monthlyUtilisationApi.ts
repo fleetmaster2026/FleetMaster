@@ -1,6 +1,6 @@
 import type { MonthlyUtilisationRecord as MonthlyUtilisation } from "../types/MonthlyUtilisation";
 
-const API_URL = "http://localhost:5000/api/monthly-utilisation";
+const API_URL = "https://fleetmaster-server.onrender.com/api/monthly-utilisation";
 
 // =======================
 // GET

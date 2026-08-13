@@ -1,6 +1,6 @@
 import type { Vehicle } from "../types/Vehicle";
 
-const API = "http://localhost:5000/api/vehicles";
+const API = "https://fleetmaster-server.onrender.com/api/vehicles";
 
 export const getVehicles = async (): Promise<Vehicle[]> => {
   const response = await fetch(API);

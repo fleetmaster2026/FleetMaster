@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { FineRecord as Fine } from "../types/Fine";
 
-const API_URL = "http://localhost:5000/api/fines";
+const API_URL = "https://fleetmaster-server.onrender.com/api/fines";
 
 export const getFines = async (): Promise<Fine[]> => {
   const res = await axios.get(API_URL);

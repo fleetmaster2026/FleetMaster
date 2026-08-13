@@ -6,7 +6,7 @@ import React, {
 } from "react";
 import { TOKEN_KEY, USER_KEY } from "../utils/httpAuth";
 
-const API_BASE = "http://localhost:5000/api/auth";
+const API_BASE = "https://fleetmaster-server.onrender.com/api/auth";
 
 interface AuthUser {
   username: string;
