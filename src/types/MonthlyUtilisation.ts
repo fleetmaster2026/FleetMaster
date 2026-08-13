@@ -1,20 +1,19 @@
-export interface MonthlyUtilisation {
+export interface MonthlyUtilisationRecord {
   id?: number;
 
   utilisationMonth: string;
 
   vehicleNo: string;
+  projectCode: string;
   site: string;
   engineer: string;
 
-  // KM
   openingKm: number;
   closingKm: number;
   differenceKm: number;
   targetKm: number;
   kmUtilisation: number;
 
-  // HOURS
   openingHours: number;
   closingHours: number;
   differenceHours: number;

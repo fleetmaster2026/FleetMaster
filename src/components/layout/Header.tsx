@@ -1,26 +1,33 @@
-// src/components/layout/Header.tsx
+import { FaRegCalendarAlt } from "react-icons/fa";
 
 const Header = () => {
-  const today = new Date().toLocaleDateString();
+  const today = new Date().toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
   return (
-    <header
-      style={{
-        height: 65,
-        background: "#2563eb",
-        color: "white",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "0 25px",
-        boxShadow: "0 2px 8px rgba(0,0,0,.15)",
-      }}
-    >
-      <h2>FleetMaster Pro</h2>
+    <header className="header">
+      <div>
+        <div className="header-eyebrow">Fleet Operations</div>
+        <h2>FleetMaster Pro</h2>
+      </div>
 
-      <div style={{ textAlign: "right" }}>
-        <div>Admin</div>
-        <small>{today}</small>
+      <div className="header-right">
+        <div className="header-date-chip">
+          <FaRegCalendarAlt />
+          {today}
+        </div>
+
+        <div className="header-user">
+          <div>
+            <div className="header-user-name">Admin</div>
+            <div className="header-user-role">Fleet Manager</div>
+          </div>
+          <div className="header-avatar">A</div>
+        </div>
       </div>
     </header>
   );

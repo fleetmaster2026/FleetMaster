@@ -1,14 +1,13 @@
 import {
-  FaEdit,
-  FaTrash,
-  FaSearch,
   FaSave,
   FaSyncAlt,
   FaTimes,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 
-import type { MonthlyUtilisation } from "../types/MonthlyUtilisation";
+import type { MonthlyUtilisationRecord as MonthlyUtilisationType } from "../types/MonthlyUtilisation";
 import type { Vehicle } from "../types/Vehicle";
 
 import {
@@ -20,23 +19,81 @@ import {
 
 import { getVehicles } from "../services/vehicleApi";
 
-import "../styles/monthlyUtilisation.css";
+import "../styles/MonthlyUtilisation.css";
+
+import ExcelActions from "../components/common/ExcelActions";
+import SearchableSelect from "../components/common/SearchableSelect";
+import RecordsToolbar, {
+  type ToolbarColumn,
+} from "../components/common/RecordsToolbar";
+import { useColumnVisibility } from "../hooks/useColumnVisibility";
+import { useColumnFilters } from "../hooks/useColumnFilters";
+import ColumnFilterHeader from "../components/common/ColumnFilterHeader";
+import { printTable } from "../utils/printTable";
+import {
+  exportRecordsToExcel,
+  readExcelFile,
+  mapRowsToRecords,
+  type ColumnDef,
+} from "../utils/excelUtils";
+
+// Columns shown in the records table - drives both the universal search
+// box (checks every field below, Remarks excluded on purpose) and the
+// "which columns to print" checklist.
+const monthlyUtilisationToolbarColumns: ToolbarColumn[] = [
+  { key: "utilisationMonth", label: "Month" },
+  { key: "vehicleNo", label: "Vehicle" },
+  { key: "projectCode", label: "Project Code" },
+  { key: "site", label: "Site" },
+  { key: "engineer", label: "Engineer" },
+  { key: "kmUtilisation", label: "KM %" },
+  { key: "hoursUtilisation", label: "Hours %" },
+  { key: "remarks", label: "Remarks" },
+];
+
+const monthlyUtilisationColumns: ColumnDef<MonthlyUtilisationType>[] = [
+  { header: "Month", key: "utilisationMonth" },
+  { header: "Vehicle No", key: "vehicleNo" },
+  { header: "Project Code", key: "projectCode" },
+  { header: "Site", key: "site" },
+  { header: "Engineer", key: "engineer" },
+  { header: "Opening KM", key: "openingKm", type: "number" },
+  { header: "Closing KM", key: "closingKm", type: "number" },
+  { header: "Difference KM", key: "differenceKm", type: "number" },
+  { header: "Target KM", key: "targetKm", type: "number" },
+  { header: "KM Utilisation %", key: "kmUtilisation", type: "number" },
+  { header: "Opening Hours", key: "openingHours", type: "number" },
+  { header: "Closing Hours", key: "closingHours", type: "number" },
+  { header: "Difference Hours", key: "differenceHours", type: "number" },
+  { header: "Target Hours", key: "targetHours", type: "number" },
+  { header: "Hours Utilisation %", key: "hoursUtilisation", type: "number" },
+  { header: "Remarks", key: "remarks" },
+];
 
 const MonthlyUtilisation = () => {
   // ============================================
   // STATES
   // ============================================
 
-  const [records, setRecords] = useState<MonthlyUtilisation[]>([]);
+  const [records, setRecords] = useState<MonthlyUtilisationType[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [search, setSearch] = useState("");
-  const emptyForm: MonthlyUtilisation = {
+
+  const {
+    isColumnVisible,
+    toggleColumn,
+    showAllColumns,
+    hideAllColumns,
+  } = useColumnVisibility();
+
+  const emptyForm: MonthlyUtilisationType = {
   utilisationMonth: "",
 
   vehicleNo: "",
+  projectCode: "",
   site: "",
   engineer: "",
 
@@ -56,7 +113,7 @@ const MonthlyUtilisation = () => {
 };
 
 const [formData, setFormData] =
-  useState<MonthlyUtilisation>(emptyForm);
+  useState<MonthlyUtilisationType>(emptyForm);
 
   // ============================================
   // LOAD DATA
@@ -83,24 +140,23 @@ const [formData, setFormData] =
   // ============================================
 
   useEffect(() => {
-    if (!formData.vehicleNo) return;
+  if (!formData.vehicleNo) return;
 
-    const vehicle = vehicles.find(
-      (v) => v.vehicleNo === formData.vehicleNo
-    );
+  const vehicle = vehicles.find(
+    (v) => v.vehicleNo === formData.vehicleNo
+  );
 
-    if (!vehicle) return;
+  if (!vehicle) return;
 
-    setFormData((prev) => ({
-      ...prev,
-
-      site: vehicle.site,
-      engineer: vehicle.engineer,
-
-      targetKm: vehicle.targetKm,
-      targetHours: vehicle.targetHours,
-    }));
-  }, [formData.vehicleNo, vehicles]);
+  setFormData((prev) => ({
+    ...prev,
+    projectCode: vehicle.projectCode,
+    site: vehicle.site,
+    engineer: vehicle.engineer,
+    targetKm: vehicle.targetKm,
+    targetHours: vehicle.targetHours,
+  }));
+}, [formData.vehicleNo, vehicles]);
 
   // ============================================
   // AUTO CALCULATIONS
@@ -114,16 +170,21 @@ const [formData, setFormData] =
     const differenceHours =
       Number(formData.closingHours) -
       Number(formData.openingHours);
+const kmUtilisation =
+  Number(formData.targetKm) > 0
+    ? Math.min(
+        (differenceKm / Number(formData.targetKm)) * 100,
+        100
+      )
+    : 0;
 
-    const kmUtilisation =
-      formData.targetKm > 0
-        ? (differenceKm / formData.targetKm) * 100
-        : 0;
-
-    const hoursUtilisation =
-      formData.targetHours > 0
-        ? (differenceHours / formData.targetHours) * 100
-        : 0;
+const hoursUtilisation =
+  Number(formData.targetHours) > 0
+    ? Math.min(
+        (differenceHours / Number(formData.targetHours)) * 100,
+        100
+      )
+    : 0;
 
     setFormData((prev) => ({
       ...prev,
@@ -152,32 +213,6 @@ const [formData, setFormData] =
   // SUMMARY
   // ============================================
 
-  const averageKm =
-    records.length === 0
-      ? 0
-      : (
-          records.reduce(
-            (sum, item) => sum + item.kmUtilisation,
-            0
-          ) / records.length
-        ).toFixed(2);
-
-  const averageHours =
-    records.length === 0
-      ? 0
-      : (
-          records.reduce(
-            (sum, item) => sum + item.hoursUtilisation,
-            0
-          ) / records.length
-        ).toFixed(2);
-
-  const poorVehicles = records.filter(
-    (item) =>
-      item.kmUtilisation < 40 ||
-      item.hoursUtilisation < 40
-  ).length;
-
   // ============================================
   // BADGE COLOR
   // ============================================
@@ -187,6 +222,81 @@ const [formData, setFormData] =
     if (value >= 41) return "badge orange";
     return "badge red";
   };
+
+  // Universal search: matches Month, Vehicle, Project Code, Site or
+  // Engineer - not just Vehicle No. Remarks is deliberately left out.
+  const filteredRecords = records.filter((item) => {
+    const text = search.trim().toLowerCase();
+    if (!text) return true;
+
+    return [
+      item.utilisationMonth,
+      item.vehicleNo,
+      item.projectCode,
+      item.site,
+      item.engineer,
+    ].some((field) => (field || "").toLowerCase().includes(text));
+  });
+
+  // Feed the *searched* rows in, not the raw list, so the Excel-style
+  // filter dropdowns only offer values present in the current search
+  // results instead of the whole unfiltered dataset.
+  const columnFilters = useColumnFilters(filteredRecords);
+  const displayedRecords = columnFilters.applyFilters(filteredRecords);
+
+  // Summary cards reflect whatever is currently on screen (search + every
+  // active column filter) - not the full unfiltered dataset.
+  const kmRecords = displayedRecords.filter(
+    (record) => Number(record.targetKm) > 0
+  );
+
+  const hourRecords = displayedRecords.filter(
+    (record) => Number(record.targetHours) > 0
+  );
+
+  const averageKm =
+    kmRecords.length === 0
+      ? 0
+      : (
+          kmRecords.reduce(
+            (sum, item) => sum + Math.min(item.kmUtilisation, 100),
+            0
+          ) / kmRecords.length
+        ).toFixed(2);
+
+  const averageHours =
+    hourRecords.length === 0
+      ? 0
+      : (
+          hourRecords.reduce(
+            (sum, item) => sum + Math.min(item.hoursUtilisation, 100),
+            0
+          ) / hourRecords.length
+        ).toFixed(2);
+
+  const poorVehicles = displayedRecords.filter((item) => {
+    const kmPoor =
+      Number(item.targetKm) > 0 &&
+      item.kmUtilisation < 40;
+
+    const hoursPoor =
+      Number(item.targetHours) > 0 &&
+      item.hoursUtilisation < 40;
+
+    return kmPoor || hoursPoor;
+  }).length;
+
+  const monthlyFilterColumns = [
+    { key: "utilisationMonth", label: "Month" },
+    { key: "vehicleNo", label: "Vehicle" },
+    { key: "projectCode", label: "Project Code" },
+    { key: "site", label: "Site" },
+    { key: "engineer", label: "Engineer" },
+    { key: "kmUtilisation", label: "KM %" },
+    { key: "hoursUtilisation", label: "Hours %" },
+    { key: "remarks", label: "Remarks" },
+  ];
+
   const clearForm = () => {
   setFormData(emptyForm);
   setEditingId(null);
@@ -227,10 +337,7 @@ const handleSave = async () => {
     alert("Unable to Save Record");
   }
 };
-const filteredRecords = records.filter((record) =>
-  record.vehicleNo.toLowerCase().includes(search.toLowerCase())
-);
-const handleEdit = (record: MonthlyUtilisation) => {
+const handleEdit = (record: MonthlyUtilisationType) => {
   setEditingId(record.id!);
   setFormData(record);
 
@@ -254,20 +361,146 @@ const handleDelete = async (id: number) => {
     clearForm();
   }
 };
+
+const handleExport = () => {
+  exportRecordsToExcel(
+    records,
+    monthlyUtilisationColumns,
+    "Monthly_Utilisation"
+  );
+};
+
+// Import = REPLACE. Whatever is in the Excel file becomes the complete
+// data set: every existing record is removed first, then every valid
+// row from the file is inserted fresh.
+const handleImport = async (file: File) => {
+  try {
+    const rows = await readExcelFile(file);
+    const imported = mapRowsToRecords<MonthlyUtilisationType>(
+      rows,
+      monthlyUtilisationColumns
+    ).filter((row) => row.vehicleNo && row.utilisationMonth);
+
+    if (imported.length === 0) {
+      alert("The selected file has no usable rows to import.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `This will DELETE all ${records.length} existing record(s) and ` +
+        `replace them with the ${imported.length} row(s) from this file.\n\n` +
+        `This cannot be undone. Continue?`
+    );
+
+    if (!confirmed) return;
+
+    // De-duplicate rows within the file itself by Vehicle No + Month,
+    // keeping the last occurrence.
+    const uniqueRows = new Map<string, Partial<MonthlyUtilisationType>>();
+    imported.forEach((row) =>
+      uniqueRows.set(
+        `${String(row.vehicleNo).trim().toLowerCase()}|${String(
+          row.utilisationMonth
+        )
+          .trim()
+          .toLowerCase()}`,
+        row
+      )
+    );
+
+    const existing = await getMonthlyUtilisations();
+    for (const r of existing) {
+      if (r.id) await deleteMonthlyUtilisation(r.id);
+    }
+
+    let added = 0;
+
+    for (const row of uniqueRows.values()) {
+      const { id, ...data } = row as MonthlyUtilisationType;
+
+      const vehicle = vehicles.find(
+        (v) => v.vehicleNo === data.vehicleNo
+      );
+
+      const site = vehicle ? vehicle.site : data.site;
+      const engineer = vehicle ? vehicle.engineer : data.engineer;
+      const projectCode = vehicle ? vehicle.projectCode : data.projectCode;
+      const targetKm = vehicle ? vehicle.targetKm : data.targetKm;
+      const targetHours = vehicle
+        ? vehicle.targetHours
+        : data.targetHours;
+
+      const differenceKm = Number(data.closingKm) - Number(data.openingKm);
+      const differenceHours =
+        Number(data.closingHours) - Number(data.openingHours);
+
+      const kmUtilisation =
+        Number(targetKm) > 0
+          ? Math.min((differenceKm / Number(targetKm)) * 100, 100)
+          : 0;
+
+      const hoursUtilisation =
+        Number(targetHours) > 0
+          ? Math.min((differenceHours / Number(targetHours)) * 100, 100)
+          : 0;
+
+      const payload: Omit<MonthlyUtilisationType, "id"> = {
+        ...data,
+        site,
+        engineer,
+        projectCode,
+        targetKm,
+        targetHours,
+        differenceKm,
+        differenceHours,
+        kmUtilisation: Number(kmUtilisation.toFixed(2)),
+        hoursUtilisation: Number(hoursUtilisation.toFixed(2)),
+      };
+
+      await addMonthlyUtilisation(payload);
+      added++;
+    }
+
+    await loadData();
+
+    const skippedDuplicates = imported.length - uniqueRows.size;
+
+    alert(
+      `Import Complete - data replaced.\nRecords added: ${added}${
+        skippedDuplicates
+          ? `\nDuplicate rows in file skipped: ${skippedDuplicates}`
+          : ""
+      }`
+    );
+  } catch (error) {
+    console.error(error);
+    alert("Unable to Import Excel File");
+  }
+};
+  const isKmEnabled = Number(formData.targetKm) > 0;
+  const isHoursEnabled = Number(formData.targetHours) > 0;
   // ============================================
   // PART 2 STARTS HERE
   // ============================================
 
   return (
     <div className="page-container">
-  <h1 className="page-title">Monthly Utilisation</h1>
+  <div className="page-title-row">
+    <h1 className="page-title">Monthly Utilisation</h1>
+
+    <ExcelActions
+      onExport={handleExport}
+      onImport={handleImport}
+      onPrint={() => printTable("print-area")}
+    />
+  </div>
 
   {/* ================= SUMMARY ================= */}
 
   <div className="summary-grid">
     <div className="summary-card">
       <h4>Total Records</h4>
-      <h2>{records.length}</h2>
+      <h2>{displayedRecords.length}</h2>
     </div>
 
     <div className="summary-card">
@@ -311,26 +544,45 @@ const handleDelete = async (id: number) => {
       <div className="form-group">
         <label>Vehicle</label>
 
-        <select
+        <SearchableSelect
+          options={vehicles.map((vehicle) => ({
+            value: vehicle.vehicleNo,
+            label: vehicle.vehicleNo,
+          }))}
           value={formData.vehicleNo}
-          onChange={(e) =>
+          placeholder="Select Vehicle"
+          onChange={(value) => {
+            const selectedVehicle = vehicles.find(
+              (v) => v.vehicleNo === value
+            );
+
             setFormData({
               ...formData,
-              vehicleNo: e.target.value,
-            })
-          }
-        >
-          <option value="">Select Vehicle</option>
+              vehicleNo: value,
+              projectCode: selectedVehicle?.projectCode || "",
+              site: selectedVehicle?.site || "",
+              engineer: selectedVehicle?.engineer || "",
+              targetKm: selectedVehicle?.targetKm || 0,
+              targetHours: selectedVehicle?.targetHours || 0,
 
-          {vehicles.map((vehicle) => (
-            <option
-              key={vehicle.id}
-              value={vehicle.vehicleNo}
-            >
-              {vehicle.vehicleNo}
-            </option>
-          ))}
-        </select>
+              // Optional: Reset readings when changing vehicle
+              openingKm: 0,
+              closingKm: 0,
+              openingHours: 0,
+              closingHours: 0,
+            });
+          }}
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Project Code</label>
+
+        <input
+          type="text"
+          value={formData.projectCode}
+          readOnly
+        />
       </div>
 
       <div className="form-group">
@@ -368,30 +620,32 @@ const handleDelete = async (id: number) => {
         <label>Opening KM</label>
 
         <input
-          type="number"
-          value={formData.openingKm}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              openingKm: Number(e.target.value),
-            })
-          }
-        />
+  type="number"
+  value={formData.openingKm}
+  disabled={!isKmEnabled}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      openingKm: Number(e.target.value),
+    })
+  }
+/>
       </div>
 
       <div className="form-group">
         <label>Closing KM</label>
 
         <input
-          type="number"
-          value={formData.closingKm}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              closingKm: Number(e.target.value),
-            })
-          }
-        />
+  type="number"
+  value={formData.closingKm}
+  disabled={!isKmEnabled}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      closingKm: Number(e.target.value),
+    })
+  }
+/>
       </div>
 
       <div className="form-group">
@@ -439,30 +693,32 @@ const handleDelete = async (id: number) => {
         <label>Opening Hours</label>
 
         <input
-          type="number"
-          value={formData.openingHours}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              openingHours: Number(e.target.value),
-            })
-          }
-        />
+  type="number"
+  value={formData.openingHours}
+  disabled={!isHoursEnabled}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      openingHours: Number(e.target.value),
+    })
+  }
+/>
       </div>
 
       <div className="form-group">
         <label>Closing Hours</label>
 
         <input
-          type="number"
-          value={formData.closingHours}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              closingHours: Number(e.target.value),
-            })
-          }
-        />
+  type="number"
+  value={formData.closingHours}
+  disabled={!isHoursEnabled}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      closingHours: Number(e.target.value),
+    })
+  }
+/>
       </div>
 
       <div className="form-group">
@@ -562,82 +818,213 @@ const handleDelete = async (id: number) => {
   </div>
 
   {/* PART 5 STARTS BELOW */}
-    {/* ================= SEARCH ================= */}
+    {/* ================= SEARCH & COLUMN FILTERS ================= */}
 
-  <div className="form-card">
-    <div className="form-group">
-      <label>Search Vehicle</label>
-
-      <input
-  type="text"
-  placeholder="Search by Vehicle No..."
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-/>
-    </div>
-  </div>
+  <RecordsToolbar
+    search={search}
+    onSearchChange={setSearch}
+    placeholder="Search Month / Vehicle / Project Code / Site / Engineer..."
+    columns={monthlyUtilisationToolbarColumns}
+    isColumnVisible={isColumnVisible}
+    onToggleColumn={toggleColumn}
+    onShowAllColumns={showAllColumns}
+    onHideAllColumns={() =>
+      hideAllColumns(monthlyUtilisationToolbarColumns.map((col) => col.key))
+    }
+  />
 
   {/* ================= RECORDS TABLE ================= */}
-<div className="form-card">
+
+  {columnFilters.activeFilterCount > 0 && (
+    <div className="active-filters-bar no-print">
+      <span>Column filters:</span>
+
+      {monthlyFilterColumns
+        .filter((col) => columnFilters.isColumnFiltered(col.key))
+        .map((col) => (
+          <span className="active-filter-chip" key={col.key}>
+            {col.label}
+            <button
+              type="button"
+              onClick={() => columnFilters.clearColumnFilter(col.key)}
+              title={`Clear ${col.label} filter`}
+            >
+              <FaTimes />
+            </button>
+          </span>
+        ))}
+
+      <button
+        type="button"
+        className="active-filters-clear"
+        onClick={columnFilters.clearAllFilters}
+      >
+        Clear all
+      </button>
+    </div>
+  )}
+
+<div className="form-card" id="print-area">
+{/* Print-only copy of the summary cards above - hidden on screen,
+    shown when printing (see printTable.ts override) so printed
+    copies open with the same Total Records / Average KM % /
+    Average Hours % / Poor Vehicles context as the on-screen page. */}
+<div className="summary-grid print-only-summary" style={{ display: "none" }}>
+  <div className="summary-card">
+    <h4>Total Records</h4>
+    <h2>{displayedRecords.length}</h2>
+  </div>
+
+  <div className="summary-card">
+    <h4>Average KM %</h4>
+    <h2>{averageKm}%</h2>
+  </div>
+
+  <div className="summary-card">
+    <h4>Average Hours %</h4>
+    <h2>{averageHours}%</h2>
+  </div>
+
+  <div className="summary-card">
+    <h4>Poor Vehicles</h4>
+    <h2>{poorVehicles}</h2>
+  </div>
+</div>
+
 <h2 className="section-title">
 Monthly Utilisation Records
 </h2>
 
+    <div className="table-scroll">
     <table className="data-table">
       <thead>
         <tr>
-          <th>Month</th>
-          <th>Vehicle</th>
-          <th>Site</th>
-          <th>Engineer</th>
-          <th>KM %</th>
-          <th>Hours %</th>
-          <th>Remarks</th>
-          <th>Actions</th>
+          <th>Sr.No</th>
+          {isColumnVisible("utilisationMonth") && (
+            <ColumnFilterHeader
+              columnKey="utilisationMonth"
+              label="Month"
+              allValues={columnFilters.getUniqueValues("utilisationMonth")}
+              selected={columnFilters.filters.utilisationMonth}
+              onApply={(v) => columnFilters.setColumnFilter("utilisationMonth", v)}
+            />
+          )}
+          {isColumnVisible("vehicleNo") && (
+            <ColumnFilterHeader
+              columnKey="vehicleNo"
+              label="Vehicle"
+              allValues={columnFilters.getUniqueValues("vehicleNo")}
+              selected={columnFilters.filters.vehicleNo}
+              onApply={(v) => columnFilters.setColumnFilter("vehicleNo", v)}
+            />
+          )}
+          {isColumnVisible("projectCode") && (
+            <ColumnFilterHeader
+              columnKey="projectCode"
+              label="Project Code"
+              allValues={columnFilters.getUniqueValues("projectCode")}
+              selected={columnFilters.filters.projectCode}
+              onApply={(v) => columnFilters.setColumnFilter("projectCode", v)}
+            />
+          )}
+          {isColumnVisible("site") && (
+            <ColumnFilterHeader
+              columnKey="site"
+              label="Site"
+              allValues={columnFilters.getUniqueValues("site")}
+              selected={columnFilters.filters.site}
+              onApply={(v) => columnFilters.setColumnFilter("site", v)}
+            />
+          )}
+          {isColumnVisible("engineer") && (
+            <ColumnFilterHeader
+              columnKey="engineer"
+              label="Engineer"
+              allValues={columnFilters.getUniqueValues("engineer")}
+              selected={columnFilters.filters.engineer}
+              onApply={(v) => columnFilters.setColumnFilter("engineer", v)}
+            />
+          )}
+          {isColumnVisible("kmUtilisation") && (
+            <ColumnFilterHeader
+              columnKey="kmUtilisation"
+              label="KM %"
+              allValues={columnFilters.getUniqueValues("kmUtilisation")}
+              selected={columnFilters.filters.kmUtilisation}
+              onApply={(v) => columnFilters.setColumnFilter("kmUtilisation", v)}
+            />
+          )}
+          {isColumnVisible("hoursUtilisation") && (
+            <ColumnFilterHeader
+              columnKey="hoursUtilisation"
+              label="Hours %"
+              allValues={columnFilters.getUniqueValues("hoursUtilisation")}
+              selected={columnFilters.filters.hoursUtilisation}
+              onApply={(v) => columnFilters.setColumnFilter("hoursUtilisation", v)}
+            />
+          )}
+          {isColumnVisible("remarks") && (
+            <ColumnFilterHeader
+              columnKey="remarks"
+              label="Remarks"
+              allValues={columnFilters.getUniqueValues("remarks")}
+              selected={columnFilters.filters.remarks}
+              onApply={(v) => columnFilters.setColumnFilter("remarks", v)}
+            />
+          )}
+          <th className="no-print">Actions</th>
         </tr>
       </thead>
 
       <tbody>
-        {records
-          .filter((item) =>
-            item.vehicleNo
-              .toLowerCase()
-              .includes(search.toLowerCase())
-          )
-          .map((item) => (
+        {displayedRecords.map((item, index) => (
             <tr key={item.id}>
-              <td>{item.utilisationMonth}</td>
-              <td>{item.vehicleNo}</td>
-              <td>{item.site}</td>
-              <td>{item.engineer}</td>
+              <td>{index + 1}</td>
+              {isColumnVisible("utilisationMonth") && (
+                <td>{item.utilisationMonth}</td>
+              )}
+              {isColumnVisible("vehicleNo") && <td>{item.vehicleNo}</td>}
+              {isColumnVisible("projectCode") && (
+                <td>{item.projectCode}</td>
+              )}
+              {isColumnVisible("site") && <td>{item.site}</td>}
+              {isColumnVisible("engineer") && <td>{item.engineer}</td>}
 
-              <td>
-                <span className={getBadgeClass(Math.min(item.kmUtilisation, 100))}>
-                  {Math.min(item.kmUtilisation,100).toFixed(2)}%
-                </span>
-              </td>
+              {isColumnVisible("kmUtilisation") && (
+                <td>
+                  <span className={getBadgeClass(Math.min(item.kmUtilisation, 100))}>
+                    {item.targetKm > 0
+    ? `${Math.min(item.kmUtilisation, 100).toFixed(2)}%`
+    : "-"}
+                  </span>
+                </td>
+              )}
 
-              <td>
-                <span className={getBadgeClass(Math.min(item.hoursUtilisation, 100))}>
-                  {Math.min(item.hoursUtilisation,100).toFixed(2)}%
-                </span>
-              </td>
+              {isColumnVisible("hoursUtilisation") && (
+                <td>
+                  <span className={getBadgeClass(Math.min(item.hoursUtilisation, 100))}>
+                    {item.targetHours > 0
+    ? `${Math.min(item.hoursUtilisation, 100).toFixed(2)}%`
+    : "-"}
+                  </span>
+                </td>
+              )}
 
-              <td>{item.remarks}</td>
-              <td>
+              {isColumnVisible("remarks") && <td>{item.remarks}</td>}
+              <td className="no-print">
 
 <button
 className="icon-btn edit-btn"
 onClick={() => handleEdit(item)}
 >
-✏️
+<FaEdit />
 </button>
 
 <button
 className="icon-btn delete-btn"
 onClick={() => handleDelete(item.id!)}
 >
-🗑️
+<FaTrash />
 </button>
 
 </td>
@@ -645,6 +1032,7 @@ onClick={() => handleDelete(item.id!)}
           ))}
       </tbody>
     </table>
+    </div>
   </div>
 
 </div>

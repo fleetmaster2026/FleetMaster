@@ -1,317 +1,259 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+/* =========================================================
+   FleetMaster Design Tokens
+   "Operations console" identity: warm charcoal neutrals,
+   a steel-teal brand color (instrumentation, not another
+   indigo SaaS gradient), and amber reserved for caution /
+   the sidebar's signature accent stripe.
+========================================================= */
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+:root{
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    /* Brand - steel teal */
+    --brand-50:#eaf5f4;
+    --brand-100:#cfe8e6;
+    --brand-400:#4f9e98;
+    --brand-500:#2c7a75;
+    --brand-600:#20605b;
+    --brand-700:#174643;
+    --brand-900:#0c2a28;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+    /* Signature accent - caution amber, used sparingly */
+    --accent-amber:#dc9d2b;
+    --accent-amber-deep:#a86c14;
+
+    /* Ink - warm charcoal, not cool slate */
+    --ink-950:#17140f;
+    --ink-900:#221e17;
+    --ink-800:#342f26;
+    --ink-700:#4b4436;
+    --ink-600:#655c4a;
+    --ink-500:#847a65;
+    --ink-400:#a89c85;
+    --ink-200:#e6dfd0;
+    --ink-100:#efe9db;
+    --ink-50:#f7f3ea;
+
+    /* Status */
+    --success:#2f7d4f;
+    --success-bg:#e9f6ee;
+    --warning:#b5750f;
+    --warning-bg:#fbf1de;
+    --danger:#c1401f;
+    --danger-bg:#fbeae4;
+    --info:#3a6a94;
+    --info-bg:#eaf2f8;
+    --violet:#7a4f96;
+    --violet-bg:#f3edf7;
+
+    /* Surface */
+    --surface:#ffffff;
+    --surface-app:#f4f0e6;
+    --border-soft:#e4dcc8;
+
+    /* Elevation - warm-tinted shadows to match the neutrals */
+    --shadow-xs:0 1px 2px rgba(23,20,15,.07);
+    --shadow-sm:0 2px 10px rgba(23,20,15,.07);
+    --shadow-md:0 10px 28px rgba(23,20,15,.10);
+    --shadow-lg:0 20px 46px rgba(23,20,15,.16);
+    --shadow-brand:0 10px 24px rgba(44,122,117,.28);
+
+    /* Radius - a touch more structured / less bubbly */
+    --r-sm:6px;
+    --r-md:10px;
+    --r-lg:14px;
+    --r-xl:18px;
+    --r-pill:999px;
+
+    /* Type */
+    --font-body:"Inter","Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+    --font-display:"Space Grotesk","Inter","Segoe UI",sans-serif;
+    --font-mono:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+body.dark{
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+    --surface:#221e17;
+    --surface-app:#17140f;
+    --border-soft:#3a3327;
+
+    --ink-900:#f4efe3;
+    --ink-800:#e6dfd0;
+    --ink-700:#c9bea6;
+    --ink-600:#a89c85;
+    --ink-100:#2b2620;
+    --ink-50:#221e17;
+
 }
 
-#root {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+/* =========================================================
+   Global reset
+========================================================= */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
-body {
-  margin: 0;
+html,
+body,
+#root{
+    width:100%;
+    height:100%;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+body{
+    overflow-x:hidden;
+    background:var(--surface-app);
+    color:var(--ink-800);
+    font-family:var(--font-body);
+    font-size:14.5px;
+    -webkit-font-smoothing:antialiased;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+h1,h2,h3,h4,h5,h6{
+    font-family:var(--font-display);
+    color:var(--ink-900);
+    letter-spacing:-.01em;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* Registration numbers, chassis/engine numbers, plate & VIN-style data
+   read like manifest entries in a fixed-width face - a small detail
+   that reinforces the "ops console" feel wherever it's applied. */
+.mono-data{
+    font-family:var(--font-mono);
+    font-size:.94em;
+    letter-spacing:.01em;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* =========================================================
+   Cards
+========================================================= */
+
+.card{
+    border:1px solid var(--border-soft) !important;
+    border-radius:var(--r-lg) !important;
+    box-shadow:var(--shadow-sm) !important;
+    background:var(--surface);
 }
 
-/* =========================
-   RTA STATUS BADGES
-========================= */
-
-.badge-green,
-.badge-orange,
-.badge-red,
-.badge-gray {
-  display: inline-block;
-  min-width: 110px;
-  text-align: center;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
+.card-header{
+    background:transparent !important;
+    border-bottom:1px solid var(--border-soft) !important;
+    font-family:var(--font-display);
+    font-size:17px;
+    font-weight:700;
+    color:var(--ink-900);
 }
 
-.badge-green {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #86efac;
+/* =========================================================
+   Buttons
+========================================================= */
+
+.btn{
+    border-radius:var(--r-sm) !important;
+    font-weight:600;
+    letter-spacing:.01em;
 }
 
-.badge-orange {
-  background: #ffedd5;
-  color: #c2410c;
-  border: 1px solid #fdba74;
+.btn-primary{
+    background:linear-gradient(135deg,var(--brand-500),var(--brand-700)) !important;
+    border:none !important;
+    box-shadow:0 4px 12px rgba(44,122,117,.25);
 }
 
-.badge-red {
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
+.btn-primary:hover{
+    box-shadow:0 6px 18px rgba(44,122,117,.35);
 }
 
-.badge-gray {
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
+/* =========================================================
+   Forms
+========================================================= */
+
+.form-control,
+.form-select{
+    height:42px;
+    border-radius:var(--r-sm);
+    border:1px solid var(--ink-200);
 }
 
-.data-table th,
-.data-table td {
-  padding: 10px;
-  text-align: center;
-  vertical-align: middle;
-  word-break: break-word;
+textarea.form-control{
+    height:auto;
 }
 
-.data-table small {
-  display: block;
-  margin-top: 4px;
-  color: #6b7280;
-  font-size: 11px;
-  font-weight: 500;
-}
-/* =========================
-   SUMMARY CARDS
-========================= */
-
-.summary-cards {
-  display: flex;
-  gap: 15px;
-  margin: 20px 0;
-  flex-wrap: wrap;
+.form-control:focus,
+.form-select:focus{
+    border-color:var(--brand-500);
+    box-shadow:0 0 0 .18rem rgba(44,122,117,.18);
 }
 
-.summary-card {
-  flex: 1;
-  min-width: 180px;
-  background: #fff;
-  border-radius: 10px;
-  padding: 15px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+label{
+    font-weight:600;
+    font-size:13px;
+    color:var(--ink-600);
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
 }
 
-.summary-card h4 {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
+/* =========================================================
+   Table
+========================================================= */
+
+.table{
+    vertical-align:middle;
+    color:var(--ink-800);
 }
 
-.summary-card h2 {
-  margin-top: 8px;
-  font-size: 28px;
+.table thead{
+    background:var(--ink-50);
 }
 
-.summary-card.expired {
-  border-left: 5px solid #dc3545;
+.table thead th{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--ink-500);
+    font-weight:700;
+    border-bottom:1px solid var(--border-soft);
 }
 
-.summary-card.warning {
-  border-left: 5px solid #fd7e14;
+/* =========================================================
+   Scrollbar
+========================================================= */
+
+::-webkit-scrollbar{
+    width:8px;
+    height:8px;
 }
 
-.summary-card.valid {
-  border-left: 5px solid #28a745;
-}
-.summary-card {
-  cursor: pointer;
-  transition: all 0.2s ease;
+::-webkit-scrollbar-thumb{
+    background:var(--ink-400);
+    border-radius:20px;
 }
 
-.summary-card:hover {
-  transform: translateY(-3px);
+/* =========================================================
+   Dark mode compatibility (bootstrap surfaces)
+========================================================= */
+
+body.dark .card{
+    background:var(--surface);
+    color:var(--ink-800);
 }
 
-.active-card {
-  transform: scale(1.03);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-}
-/* =========================
-   Dashboard Attention Scroll
-========================= */
-
-.attention-container {
-  max-height: 300px;
-  overflow: hidden;
-  position: relative;
+body.dark .table{
+    color:var(--ink-800);
+    --bs-table-bg:var(--surface);
+    --bs-table-color:var(--ink-800);
 }
 
-.attention-scroll {
-  animation: attentionScroll 25s linear infinite;
+body.dark .form-control,
+body.dark .form-select{
+    background:var(--ink-50);
+    color:var(--ink-800);
+    border:1px solid var(--border-soft);
 }
 
-.attention-container:hover .attention-scroll {
-  animation-play-state: paused;
-}
-
-@keyframes attentionScroll {
-  from {
-    transform: translateY(0);
-  }
-
-  to {
-    transform: translateY(-50%);
-  }
-}
-.badge-green {
-  background: #dcfce7;
-  color: #166534;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.badge-gray {
-  background: #e5e7eb;
-  color: #374151;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-}
-.breakdown-type {
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.engine {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.hydraulic {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.electrical {
-  background: #fef9c3;
-  color: #854d0e;
-}
-
-.transmission {
-  background: #ede9fe;
-  color: #6d28d9;
-}
-
-.tyre {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.battery {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.brake {
-  background: #ffedd5;
-  color: #c2410c;
-}
-
-.other {
-  background: #e5e7eb;
-  color: #374151;
+body.dark .form-control::placeholder{
+    color:var(--ink-500);
 }

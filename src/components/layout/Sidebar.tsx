@@ -1,52 +1,73 @@
-// src/components/layout/Sidebar.tsx
-
 import { NavLink } from "react-router-dom";
+import {
+  FaTachometerAlt,
+  FaHardHat,
+  FaTruck,
+  FaCalendarAlt,
+  FaFileAlt,
+  FaTools,
+  FaMoneyBillWave,
+  FaCog,
+} from "react-icons/fa";
 
-const menus = [
-  { name: "🏠 Dashboard", path: "/" },
-  { name: "🚚 Vehicle Master", path: "/vehicles" },
-  { name: "🏗 Site Master", path: "/sites" },
-  { name: "👷 Engineer Master", path: "/engineers" },
-  { name: "📅 Monthly Utilisation", path: "/utilisation" },
-  { name: "📄 RTA Documents", path: "/documents" },
-  { name: "🔧 Breakdown Register", path: "/breakdowns" },
-  { name: "💰 Fine Register", path: "/fines" },
-  { name: "📊 Reports", path: "/reports" },
-  { name: "⚙ Settings", path: "/settings" },
+const navItems = [
+  { to: "/", icon: <FaTachometerAlt />, label: "Dashboard", end: true },
+  { to: "/site-engineers", icon: <FaHardHat />, label: "Site & Engineer" },
+  { to: "/vehicles", icon: <FaTruck />, label: "Vehicle Master" },
+  { to: "/utilisation", icon: <FaCalendarAlt />, label: "Monthly Utilisation" },
+  { to: "/documents", icon: <FaFileAlt />, label: "RTA Documents" },
+  { to: "/breakdowns", icon: <FaTools />, label: "Breakdown Register" },
+  { to: "/fines", icon: <FaMoneyBillWave />, label: "Fine Register" },
 ];
+
 const Sidebar = () => {
   return (
-    <aside
-      style={{
-        width: 250,
-        background: "#1e293b",
-        color: "#fff",
-        padding: 20,
-      }}
-    >
-      <h2 style={{ textAlign: "center" }}>🚚 FleetMaster Pro</h2>
-
-      <hr />
-
-      <div style={{ marginTop: 20 }}>
-        {menus.map((menu) => (
-          <NavLink
-            key={menu.path}
-            to={menu.path}
-            style={({ isActive }) => ({
-              display: "block",
-              padding: "12px",
-              marginBottom: 8,
-              borderRadius: 8,
-              textDecoration: "none",
-              color: "#fff",
-              background: isActive ? "#2563eb" : "transparent",
-            })}
-          >
-            {menu.name}
-          </NavLink>
-        ))}
+    <aside className="sidebar">
+      <div className="sidebar-brand">
+        <div className="sidebar-logo">
+          <FaTruck />
+        </div>
+        <div>
+          <div className="sidebar-title">FleetMaster Pro</div>
+          <div className="sidebar-subtitle">Fleet Operations Suite</div>
+        </div>
       </div>
+
+      <div>
+        <div className="sidebar-section-label">Main Menu</div>
+        <div className="sidebar-menu">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                isActive ? "active" : undefined
+              }
+            >
+              <span className="sidebar-icon">{item.icon}</span>
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="sidebar-section-label">System</div>
+        <div className="sidebar-menu">
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              isActive ? "active" : undefined
+            }
+          >
+            <span className="sidebar-icon"><FaCog /></span>
+            Settings
+          </NavLink>
+        </div>
+      </div>
+
+      <div className="sidebar-footer">FleetMaster Pro · v1.0</div>
     </aside>
   );
 };

@@ -30,40 +30,58 @@ router.post("/", (req, res) => {
   console.log(req.body);
 
   const {
+    businessUnit,
+    projectCode,
     vehicleNo,
+    vehicleName,
+    vehicleType,
     site,
     engineer,
     breakdownDate,
+    breakdownDays,
     breakdownType,
     breakdownDescription,
     requireFund,
     estimatedAmount,
+    approvalStatus,
     remarks,
   } = req.body;
 
   db.run(
     `INSERT INTO breakdowns
     (
+      businessUnit,
+      projectCode,
       vehicleNo,
+      vehicleName,
+      vehicleType,
       site,
       engineer,
       breakdownDate,
+      breakdownDays,
       breakdownType,
       breakdownDescription,
       requireFund,
       estimatedAmount,
+      approvalStatus,
       remarks
     )
-    VALUES (?,?,?,?,?,?,?,?,?)`,
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
+      businessUnit,
+      projectCode,
       vehicleNo,
+      vehicleName,
+      vehicleType,
       site,
       engineer,
       breakdownDate,
+      breakdownDays,
       breakdownType,
       breakdownDescription,
       requireFund,
       estimatedAmount,
+      approvalStatus,
       remarks,
     ],
     function (err) {
@@ -89,38 +107,56 @@ router.post("/", (req, res) => {
 
 router.put("/:id", (req, res) => {
   const {
+    businessUnit,
+    projectCode,
     vehicleNo,
+    vehicleName,
+    vehicleType,
     site,
     engineer,
     breakdownDate,
+    breakdownDays,
     breakdownType,
     breakdownDescription,
     requireFund,
     estimatedAmount,
+    approvalStatus,
     remarks,
   } = req.body;
 
   db.run(
     `UPDATE breakdowns SET
+      businessUnit=?,
+      projectCode=?,
       vehicleNo=?,
+      vehicleName=?,
+      vehicleType=?,
       site=?,
       engineer=?,
       breakdownDate=?,
+      breakdownDays=?,
       breakdownType=?,
       breakdownDescription=?,
       requireFund=?,
       estimatedAmount=?,
+      approvalStatus=?,
       remarks=?
     WHERE id=?`,
     [
+      businessUnit,
+      projectCode,
       vehicleNo,
+      vehicleName,
+      vehicleType,
       site,
       engineer,
       breakdownDate,
+      breakdownDays,
       breakdownType,
       breakdownDescription,
       requireFund,
       estimatedAmount,
+      approvalStatus,
       remarks,
       req.params.id,
     ],

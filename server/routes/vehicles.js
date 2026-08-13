@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../database/db");
+const { normalizeObject } = require("../utility/textHelper");
 
 // =========================
 // GET ALL VEHICLES
@@ -20,63 +21,71 @@ router.get("/", (req, res) => {
 // ADD VEHICLE
 // =========================
 router.post("/", (req, res) => {
+
+  const data = normalizeObject(req.body);
+
   const {
     vehicleNo,
     vehicleName,
     vehicleType,
+    owner,
     manufacturer,
-    model,
     rcNumber,
     registeringRTO,
     registrationDate,
     chassisNo,
     engineNo,
     fuelType,
+    projectCode,
     site,
     engineer,
+    enableKm,
+    enableHours,
     targetKm,
     targetHours,
-    status,
-  } = req.body;
+  } = data;
 
   db.run(
-    `INSERT INTO vehicles
-    (
+    `INSERT INTO vehicles (
       vehicleNo,
       vehicleName,
       vehicleType,
+      owner,
       manufacturer,
-      model,
       rcNumber,
       registeringRTO,
       registrationDate,
       chassisNo,
       engineNo,
       fuelType,
+      projectCode,
       site,
       engineer,
+      enableKm,
+      enableHours,
       targetKm,
-      targetHours,
-      status
+      targetHours
     )
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       vehicleNo,
       vehicleName,
       vehicleType,
+      owner,
       manufacturer,
-      model,
       rcNumber,
       registeringRTO,
       registrationDate,
       chassisNo,
       engineNo,
       fuelType,
+      projectCode,
       site,
       engineer,
+      enableKm,
+      enableHours,
       targetKm,
       targetHours,
-      status,
     ],
     function (err) {
       if (err) {
@@ -96,61 +105,70 @@ router.post("/", (req, res) => {
 // UPDATE VEHICLE
 // =========================
 router.put("/:id", (req, res) => {
+
+  const data = normalizeObject(req.body);
+
   const {
     vehicleNo,
     vehicleName,
     vehicleType,
+    owner,
     manufacturer,
-    model,
     rcNumber,
     registeringRTO,
     registrationDate,
     chassisNo,
     engineNo,
     fuelType,
+    projectCode,
     site,
     engineer,
+    enableKm,
+    enableHours,
     targetKm,
     targetHours,
-    status,
-  } = req.body;
+  } = data;
 
   db.run(
     `UPDATE vehicles SET
       vehicleNo=?,
       vehicleName=?,
       vehicleType=?,
+      owner=?,
       manufacturer=?,
-      model=?,
       rcNumber=?,
       registeringRTO=?,
       registrationDate=?,
       chassisNo=?,
       engineNo=?,
       fuelType=?,
+      projectCode=?,
       site=?,
       engineer=?,
+      enableKm=?,
+      enableHours=?,
       targetKm=?,
-      targetHours=?,
-      status=?
+      targetHours=?
     WHERE id=?`,
     [
       vehicleNo,
       vehicleName,
       vehicleType,
+      owner,
       manufacturer,
-      model,
       rcNumber,
       registeringRTO,
       registrationDate,
       chassisNo,
       engineNo,
       fuelType,
+      projectCode,
       site,
       engineer,
+      enableKm,
+      enableHours,
       targetKm,
       targetHours,
-      status,
       req.params.id,
     ],
     function (err) {

@@ -1,4 +1,4 @@
-import type { MonthlyUtilisation } from "../types/MonthlyUtilisation";
+import type { MonthlyUtilisationRecord as MonthlyUtilisation } from "../types/MonthlyUtilisation";
 
 const API_URL = "http://localhost:5000/api/monthly-utilisation";
 

@@ -2,10 +2,11 @@ export interface RtaDocument {
   id?: number;
 
   vehicleNo: string;
+  registeringRTO: string;
   site: string;
   engineer: string;
 
-  rcExpiry: string;
+  registrationDate: string;
   insuranceExpiry: string;
   fitnessExpiry: string;
   permitExpiry: string;

@@ -1,3 +1,4 @@
+const { normalizeObject } = require("../utility/textHelper");
 const express = require("express");
 const router = express.Router();
 const db = require("../database/db");
@@ -24,10 +25,14 @@ router.get("/", (req, res) => {
 // ADD MONTHLY UTILISATION
 // =========================
 router.post("/", (req, res) => {
+
+  const data = normalizeObject(req.body);
+
   const {
     utilisationMonth,
 
     vehicleNo,
+    projectCode,
     site,
     engineer,
 
@@ -44,7 +49,7 @@ router.post("/", (req, res) => {
     hoursUtilisation,
 
     remarks,
-  } = req.body;
+  } = data;
 
   db.run(
     `INSERT INTO monthly_utilisation
@@ -52,6 +57,7 @@ router.post("/", (req, res) => {
       utilisationMonth,
 
       vehicleNo,
+      projectCode,
       site,
       engineer,
 
@@ -70,11 +76,12 @@ router.post("/", (req, res) => {
       remarks
     )
     VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       utilisationMonth,
 
       vehicleNo,
+      projectCode,
       site,
       engineer,
 
@@ -110,10 +117,14 @@ router.post("/", (req, res) => {
 // UPDATE MONTHLY UTILISATION
 // =========================
 router.put("/:id", (req, res) => {
+
+  const data = normalizeObject(req.body);
+
   const {
     utilisationMonth,
 
     vehicleNo,
+    projectCode,
     site,
     engineer,
 
@@ -130,7 +141,7 @@ router.put("/:id", (req, res) => {
     hoursUtilisation,
 
     remarks,
-  } = req.body;
+  } = data;
 
   db.run(
     `UPDATE monthly_utilisation SET
@@ -138,6 +149,7 @@ router.put("/:id", (req, res) => {
       utilisationMonth=?,
 
       vehicleNo=?,
+      projectCode=?,
       site=?,
       engineer=?,
 
@@ -160,6 +172,7 @@ router.put("/:id", (req, res) => {
       utilisationMonth,
 
       vehicleNo,
+      projectCode,
       site,
       engineer,
 
@@ -191,7 +204,6 @@ router.put("/:id", (req, res) => {
     }
   );
 });
-
 // =========================
 // DELETE MONTHLY UTILISATION
 // =========================
