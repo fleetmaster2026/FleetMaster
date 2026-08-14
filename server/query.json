@@ -1,0 +1,1 @@
+{"requests":[{"type":"execute","stmt":{"sql":"SELECT COUNT(*) as count FROM vehicles"}},{"type":"close"}]}

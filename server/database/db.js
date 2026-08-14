@@ -1,377 +1,369 @@
-const sqlite3 = require("sqlite3").verbose();
-const path = require("path");
+require("dotenv").config();
+const { createClient } = require("@libsql/client");
 
-const dbPath = path.join(__dirname, "fleetmaster.db");
+// ---------------------------------------------------------------------
+// Turso (libSQL) connection.
+//
+// TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set as environment
+// variables (locally in server/.env, and on Render under
+// Environment). Get both from the Turso dashboard after creating your
+// database.
+// ---------------------------------------------------------------------
+if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+  console.error(
+    "Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN environment variables."
+  );
+}
 
-console.log("DATABASE PATH:", dbPath);
+const client = createClient({
+  url: process.env.TURSO_DATABASE_URL,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
 
-const db = new sqlite3.Database(dbPath,
-  (err) => {
-    if (err) {
-      console.error("Database Error:", err.message);
-    } else {
-      console.log("SQLite Connected");
+console.log("DATABASE: connecting to Turso at", process.env.TURSO_DATABASE_URL);
+
+// ---------------------------------------------------------------------
+// Compatibility shim.
+//
+// Every route/controller in this project was written against the
+// classic `sqlite3` package's callback API:
+//
+//   db.run(sql, params, function (err) { ... this.lastID ... })
+//   db.all(sql, params, (err, rows) => { ... })
+//   db.get(sql, params, (err, row) => { ... })
+//
+// Turso's client (@libsql/client) is promise-based instead, with a
+// different result shape. Rather than rewrite every call site across
+// the project, this shim re-implements run/all/get/serialize with the
+// exact same signatures and callback behavior, backed by Turso under
+// the hood. Existing route/controller files do not need to change.
+// ---------------------------------------------------------------------
+
+function normalizeArgs(params) {
+  // sqlite3 call sites in this project always pass either an array of
+  // positional "?" params, or omit params entirely.
+  if (!params || typeof params === "function") return [];
+  return params;
+}
+
+const db = {
+  run(sql, params, callback) {
+    if (typeof params === "function") {
+      callback = params;
+      params = [];
+    }
+    const args = normalizeArgs(params);
+
+    client
+      .execute({ sql, args })
+      .then((result) => {
+        if (!callback) return;
+        const context = {
+          lastID:
+            result.lastInsertRowid !== undefined &&
+            result.lastInsertRowid !== null
+              ? Number(result.lastInsertRowid)
+              : undefined,
+          changes: result.rowsAffected,
+        };
+        callback.call(context, null);
+      })
+      .catch((err) => {
+        if (callback) callback.call({}, err);
+        else console.error("db.run error:", err.message);
+      });
+  },
+
+  all(sql, params, callback) {
+    if (typeof params === "function") {
+      callback = params;
+      params = [];
+    }
+    const args = normalizeArgs(params);
+
+    client
+      .execute({ sql, args })
+      .then((result) => {
+        if (callback) callback(null, result.rows);
+      })
+      .catch((err) => {
+        if (callback) callback(err);
+        else console.error("db.all error:", err.message);
+      });
+  },
+
+  get(sql, params, callback) {
+    if (typeof params === "function") {
+      callback = params;
+      params = [];
+    }
+    const args = normalizeArgs(params);
+
+    client
+      .execute({ sql, args })
+      .then((result) => {
+        if (callback) callback(null, result.rows[0]);
+      })
+      .catch((err) => {
+        if (callback) callback(err);
+        else console.error("db.get error:", err.message);
+      });
+  },
+
+  // The original code only used db.serialize(fn) to group the startup
+  // CREATE TABLE / ALTER TABLE statements. Real sequencing for those is
+  // handled separately below (setupSchema), so here we just run the
+  // callback as-is for compatibility with any other db.serialize(...)
+  // call elsewhere in the project.
+  serialize(fn) {
+    fn();
+  },
+};
+
+// ---------------------------------------------------------------------
+// Schema setup - runs once at startup, awaited in order so an ALTER
+// TABLE never races ahead of the CREATE TABLE it depends on.
+// Uses the raw client directly (not the shim above) so it can be
+// cleanly awaited step by step.
+// ---------------------------------------------------------------------
+
+async function runSql(sql) {
+  try {
+    await client.execute(sql);
+  } catch (err) {
+    // Many of these are intentionally "safe to fail" migrations
+    // (duplicate column, etc.) - mirror the old code's behavior of
+    // swallowing those errors, but log anything unexpected.
+    if (!/duplicate column|already exists/i.test(err.message)) {
+      console.error("Schema step failed:", err.message);
     }
   }
-);
+}
 
-db.serialize(() => {
-  // =========================
-  // VEHICLES TABLE
-  // =========================
-  db.run(`
+async function setupSchema() {
+  await runSql(`
     CREATE TABLE IF NOT EXISTS vehicles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-
       vehicleNo TEXT,
       vehicleName TEXT,
       vehicleType TEXT,
       owner TEXT,
-
       manufacturer TEXT,
       model TEXT,
-
       rcNumber TEXT,
       registeringRTO TEXT,
       registrationDate TEXT,
-
       chassisNo TEXT,
       engineNo TEXT,
       fuelType TEXT,
-
       projectCode TEXT,
       site TEXT,
       engineer TEXT,
-
       targetKm INTEGER,
       targetHours INTEGER,
-
-      status TEXT
-    )
-  `, () => {
-    // Upgrade path for databases created before Project Code existed on
-    // vehicles. sqlite has no "ADD COLUMN IF NOT EXISTS", so we just run
-    // it and ignore the "duplicate column name" error on a
-    // fresh/already-migrated database.
-    db.run(`ALTER TABLE vehicles ADD COLUMN projectCode TEXT`, () => {});
-    // Same upgrade path for the newer "owner" column.
-    db.run(`ALTER TABLE vehicles ADD COLUMN owner TEXT`, () => {});
-  });
-
-  // =========================
-  // SITES TABLE
-  // =========================
-  db.run(`
-    CREATE TABLE IF NOT EXISTS sites (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-      siteName TEXT,
-      location TEXT,
-      projectCode TEXT,
-
       status TEXT
     )
   `);
-  // =========================
-// ENGINEERS TABLE
-// =========================
-db.run(`
-  CREATE TABLE IF NOT EXISTS engineers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+  await runSql(`ALTER TABLE vehicles ADD COLUMN projectCode TEXT`);
+  await runSql(`ALTER TABLE vehicles ADD COLUMN owner TEXT`);
 
-    engineerName TEXT NOT NULL,
-    employeeCode TEXT,
-    mobile TEXT,
-    email TEXT,
-    designation TEXT,
-    site TEXT,
-    status TEXT
-  )
-`);
-// =========================
-// MONTHLY UTILISATION TABLE
-// =========================
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS sites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      siteName TEXT,
+      location TEXT,
+      projectCode TEXT,
+      status TEXT
+    )
+  `);
 
-db.run(`
-CREATE TABLE IF NOT EXISTS monthly_utilisation (
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS engineers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      engineerName TEXT NOT NULL,
+      employeeCode TEXT,
+      mobile TEXT,
+      email TEXT,
+      designation TEXT,
+      site TEXT,
+      status TEXT
+    )
+  `);
 
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS monthly_utilisation (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      utilisationMonth TEXT,
+      vehicleNo TEXT,
+      projectCode TEXT,
+      site TEXT,
+      engineer TEXT,
+      openingKm REAL,
+      closingKm REAL,
+      differenceKm REAL,
+      targetKm REAL,
+      kmUtilisation REAL,
+      openingHours REAL,
+      closingHours REAL,
+      differenceHours REAL,
+      targetHours REAL,
+      hoursUtilisation REAL,
+      remarks TEXT
+    )
+  `);
+  await runSql(`ALTER TABLE monthly_utilisation ADD COLUMN projectCode TEXT`);
 
-    utilisationMonth TEXT,
-
-    vehicleNo TEXT,
-    projectCode TEXT,
-    site TEXT,
-    engineer TEXT,
-
-    openingKm REAL,
-    closingKm REAL,
-    differenceKm REAL,
-    targetKm REAL,
-    kmUtilisation REAL,
-
-    openingHours REAL,
-    closingHours REAL,
-    differenceHours REAL,
-    targetHours REAL,
-    hoursUtilisation REAL,
-
-    remarks TEXT
-)
-`, () => {
-  // Upgrade path for databases created before Project Code existed on
-  // monthly utilisation records. sqlite has no "ADD COLUMN IF NOT
-  // EXISTS", so we just run it and ignore the "duplicate column name"
-  // error on a fresh/already-migrated database.
-  db.run(
-    `ALTER TABLE monthly_utilisation ADD COLUMN projectCode TEXT`,
-    () => {}
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS rta_documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vehicleNo TEXT,
+      registeringRTO TEXT,
+      site TEXT,
+      engineer TEXT,
+      registrationDate TEXT,
+      insuranceExpiry TEXT,
+      fitnessExpiry TEXT,
+      permitExpiry TEXT,
+      pollutionExpiry TEXT,
+      taxExpiry TEXT,
+      remarks TEXT
+    )
+  `);
+  await runSql(
+    `ALTER TABLE rta_documents RENAME COLUMN rcExpiry TO registrationDate`
   );
-});
-// =========================
-// RTA DOCUMENTS TABLE
-// =========================
+  await runSql(`ALTER TABLE rta_documents ADD COLUMN taxExpiry TEXT`);
+  await runSql(`ALTER TABLE rta_documents ADD COLUMN registeringRTO TEXT`);
 
-db.run(`
-CREATE TABLE IF NOT EXISTS rta_documents (
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS breakdowns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      businessUnit TEXT,
+      projectCode TEXT,
+      vehicleNo TEXT NOT NULL,
+      vehicleName TEXT,
+      vehicleType TEXT,
+      site TEXT,
+      engineer TEXT,
+      breakdownDate TEXT,
+      breakdownDays REAL,
+      breakdownType TEXT,
+      breakdownDescription TEXT,
+      requireFund TEXT,
+      estimatedAmount REAL,
+      approvalStatus TEXT,
+      remarks TEXT
+    )
+  `);
 
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    vehicleNo TEXT,
-    registeringRTO TEXT,
-    site TEXT,
-    engineer TEXT,
-
-    registrationDate TEXT,
-    insuranceExpiry TEXT,
-    fitnessExpiry TEXT,
-    permitExpiry TEXT,
-    pollutionExpiry TEXT,
-    taxExpiry TEXT,
-    remarks TEXT
-)
-`, () => {
-  // Migration for existing databases created before this change:
-  // "rcExpiry" (RC Expiry) is being repurposed into "registrationDate"
-  // (Registration Date), which is now used to auto-calculate vehicle age.
-  // sqlite has no "RENAME COLUMN IF EXISTS", so we just attempt it and
-  // silently ignore the error on databases that are already migrated or
-  // were freshly created with the new column name above.
-  db.run(
-    `ALTER TABLE rta_documents RENAME COLUMN rcExpiry TO registrationDate`,
-    () => {}
-  );
-  // Older databases may also be missing the taxExpiry column entirely.
-  db.run(`ALTER TABLE rta_documents ADD COLUMN taxExpiry TEXT`, () => {});
-  // Older databases may also be missing the registeringRTO column,
-  // which is now auto-fetched from Vehicle Master and stored alongside
-  // each RTA record.
-  db.run(`ALTER TABLE rta_documents ADD COLUMN registeringRTO TEXT`, () => {});
-});
-// ================= Breakdown Register =================
-
-db.run(`
-CREATE TABLE IF NOT EXISTS breakdowns (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    businessUnit TEXT,
-    projectCode TEXT,
-
-    vehicleNo TEXT NOT NULL,
-    vehicleName TEXT,
-    vehicleType TEXT,
-
-    site TEXT,
-    engineer TEXT,
-
-    breakdownDate TEXT,
-    breakdownDays REAL,
-    breakdownType TEXT,
-    breakdownDescription TEXT,
-
-    requireFund TEXT,
-    estimatedAmount REAL,
-    approvalStatus TEXT,
-
-    remarks TEXT
-)
-`);
-
-// Upgrade path for databases created before these columns existed.
-// SQLite's CREATE TABLE IF NOT EXISTS above won't add columns to an
-// already-existing table, so we add them here if missing. Each ALTER
-// is safe to attempt repeatedly - errors (column already exists) are
-// swallowed on purpose.
-db.all(`PRAGMA table_info(breakdowns)`, [], (err, columns) => {
-  if (err) {
+  // Upgrade path for older breakdowns tables missing newer columns.
+  try {
+    const info = await client.execute(`PRAGMA table_info(breakdowns)`);
+    const existingColumns = info.rows.map((c) => c.name);
+    const requiredColumns = [
+      { name: "businessUnit", type: "TEXT" },
+      { name: "projectCode", type: "TEXT" },
+      { name: "vehicleName", type: "TEXT" },
+      { name: "vehicleType", type: "TEXT" },
+      { name: "breakdownDays", type: "REAL" },
+      { name: "approvalStatus", type: "TEXT" },
+    ];
+    for (const { name, type } of requiredColumns) {
+      if (!existingColumns.includes(name)) {
+        await runSql(`ALTER TABLE breakdowns ADD COLUMN ${name} ${type}`);
+        console.log(`Added missing column '${name}' to breakdowns table`);
+      }
+    }
+  } catch (err) {
     console.error("Failed to read breakdowns table info:", err.message);
-    return;
   }
 
-  const existingColumns = columns.map((c) => c.name);
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS fines (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vehicleNo TEXT NOT NULL,
+      projectCode TEXT,
+      site TEXT,
+      engineer TEXT,
+      fineDate TEXT,
+      fineReason TEXT,
+      fineAmount REAL,
+      requireFund TEXT,
+      remarks TEXT
+    )
+  `);
+  await runSql(`ALTER TABLE fines ADD COLUMN projectCode TEXT`);
 
-  const requiredColumns = [
-    { name: "businessUnit", type: "TEXT" },
-    { name: "projectCode", type: "TEXT" },
-    { name: "vehicleName", type: "TEXT" },
-    { name: "vehicleType", type: "TEXT" },
-    { name: "breakdownDays", type: "REAL" },
-    { name: "approvalStatus", type: "TEXT" },
-  ];
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS site_engineers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      siteLocation TEXT,
+      projectCode TEXT,
+      businessUnit TEXT,
+      engineerName TEXT,
+      mobile TEXT,
+      email TEXT,
+      designation TEXT,
+      projectManagerName TEXT,
+      pmContact TEXT,
+      pmEmail TEXT,
+      status TEXT
+    )
+  `);
+  await runSql(
+    `ALTER TABLE site_engineers ADD COLUMN projectManagerName TEXT`
+  );
+  await runSql(`ALTER TABLE site_engineers ADD COLUMN pmContact TEXT`);
+  await runSql(`ALTER TABLE site_engineers ADD COLUMN pmEmail TEXT`);
 
-  requiredColumns.forEach(({ name, type }) => {
-    if (!existingColumns.includes(name)) {
-      db.run(
-        `ALTER TABLE breakdowns ADD COLUMN ${name} ${type}`,
-        (alterErr) => {
-          if (alterErr) {
-            console.error(
-              `Failed to add column ${name} to breakdowns:`,
-              alterErr.message
-            );
-          } else {
-            console.log(`Added missing column '${name}' to breakdowns table`);
-          }
-        }
-      );
-    }
-  });
-});
-db.run(`
-CREATE TABLE IF NOT EXISTS fines (
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS email_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      reminderDate TEXT,
+      site TEXT,
+      engineer TEXT,
+      engineerEmail TEXT,
+      vehicles INTEGER,
+      alerts INTEGER,
+      status TEXT,
+      sentAt TEXT
+    )
+  `);
+  console.log("✅ email_logs table ready");
 
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS settings (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      company_name TEXT,
+      company_logo TEXT,
+      address TEXT,
+      phone TEXT,
+      email TEXT,
+      gst_number TEXT,
+      theme TEXT DEFAULT 'Light',
+      currency TEXT DEFAULT '₹',
+      date_format TEXT DEFAULT 'DD/MM/YYYY',
+      rows_per_page INTEGER DEFAULT 10,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-    vehicleNo TEXT NOT NULL,
+  await runSql(`
+    INSERT OR IGNORE INTO settings (
+      id, company_name, company_logo, address, phone, email, gst_number,
+      theme, currency, date_format, rows_per_page
+    )
+    VALUES (
+      1, '', '', '', '', '', '', 'Light', '₹', 'DD/MM/YYYY', 10
+    )
+  `);
 
-    projectCode TEXT,
+  console.log("SQLite (Turso) Connected");
+}
 
-    site TEXT,
-
-    engineer TEXT,
-
-    fineDate TEXT,
-
-    fineReason TEXT,
-
-    fineAmount REAL,
-
-    requireFund TEXT,
-
-    remarks TEXT
-
-)
-`, () => {
-  // Upgrade path for databases created before Project Code existed on
-  // fines. sqlite has no "ADD COLUMN IF NOT EXISTS", so we just run it
-  // and ignore the "duplicate column name" error on a fresh/already-
-  // migrated database.
-  db.run(`ALTER TABLE fines ADD COLUMN projectCode TEXT`, () => {});
-});
-// =========================
-// SITE & ENGINEER MASTER
-// =========================
-
-db.run(`
-CREATE TABLE IF NOT EXISTS site_engineers (
-
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    siteLocation TEXT,
-    projectCode TEXT,
-    businessUnit TEXT,
-
-    engineerName TEXT,
-    mobile TEXT,
-    email TEXT,
-    designation TEXT,
-
-    projectManagerName TEXT,
-    pmContact TEXT,
-    pmEmail TEXT,
-
-    status TEXT
-
-)
-`, () => {
-  // These ALTER TABLE calls only matter for existing databases created
-  // before the PM columns were added above. sqlite has no
-  // "ADD COLUMN IF NOT EXISTS", so we just run them and ignore the
-  // "duplicate column name" error on a fresh/already-migrated database.
-  db.run(`ALTER TABLE site_engineers ADD COLUMN projectManagerName TEXT`, () => {});
-  db.run(`ALTER TABLE site_engineers ADD COLUMN pmContact TEXT`, () => {});
-  db.run(`ALTER TABLE site_engineers ADD COLUMN pmEmail TEXT`, () => {});
-});
-// EMAIL LOGS
-// ====================================
-
-db.run(`
-CREATE TABLE IF NOT EXISTS email_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    reminderDate TEXT,
-    site TEXT,
-    engineer TEXT,
-    engineerEmail TEXT,
-    vehicles INTEGER,
-    alerts INTEGER,
-    status TEXT,
-    sentAt TEXT
-)
-`, (err) => {
-    if (err) {
-        console.log(err);
-    } else {
-        console.log("✅ email_logs table ready");
-    }
-});
-db.run(`
-CREATE TABLE IF NOT EXISTS settings (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
-
-    company_name TEXT,
-    company_logo TEXT,
-    address TEXT,
-    phone TEXT,
-    email TEXT,
-    gst_number TEXT,
-
-    theme TEXT DEFAULT 'Light',
-    currency TEXT DEFAULT '₹',
-    date_format TEXT DEFAULT 'DD/MM/YYYY',
-    rows_per_page INTEGER DEFAULT 10,
-
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)
-`);
-db.run(`
-INSERT OR IGNORE INTO settings (
-    id,
-    company_name,
-    company_logo,
-    address,
-    phone,
-    email,
-    gst_number,
-    theme,
-    currency,
-    date_format,
-    rows_per_page
-)
-VALUES (
-    1,
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    'Light',
-    '₹',
-    'DD/MM/YYYY',
-    10
-)
-`);
+setupSchema().catch((err) => {
+  console.error("Database setup failed:", err.message);
 });
 
 module.exports = db;
