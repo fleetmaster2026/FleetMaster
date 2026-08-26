@@ -1,87 +1,92 @@
 /* =========================================================
    FleetMaster Design Tokens
-   "Operations console" identity: warm charcoal neutrals,
-   a steel-teal brand color (instrumentation, not another
-   indigo SaaS gradient), and amber reserved for caution /
-   the sidebar's signature accent stripe.
+   Restyled to match the Adminator 2026 admin dashboard
+   template (MIT licensed, github.com/puikinsh/Adminator-
+   admin-dashboard) - same variable names as before so every
+   component that already consumes them just picks up the
+   new values automatically.
 ========================================================= */
 
 :root{
 
-    /* Brand - steel teal */
-    --brand-50:#eaf5f4;
-    --brand-100:#cfe8e6;
-    --brand-400:#4f9e98;
-    --brand-500:#2c7a75;
-    --brand-600:#20605b;
-    --brand-700:#174643;
-    --brand-900:#0c2a28;
+    /* Brand - Adminator blue */
+    --brand-50:#EFF6FF;
+    --brand-100:#DBEAFE;
+    --brand-400:#3B82F6;
+    --brand-500:#2563EB;
+    --brand-600:#1D4ED8;
+    --brand-700:#1E40AF;
+    --brand-900:#1E3A8A;
 
-    /* Signature accent - caution amber, used sparingly */
-    --accent-amber:#dc9d2b;
-    --accent-amber-deep:#a86c14;
+    /* Signature accent - kept for anything still referencing it,
+       mapped to Adminator's orange */
+    --accent-amber:#F97316;
+    --accent-amber-deep:#C2410C;
 
-    /* Ink - warm charcoal, not cool slate */
-    --ink-950:#17140f;
-    --ink-900:#221e17;
-    --ink-800:#342f26;
-    --ink-700:#4b4436;
-    --ink-600:#655c4a;
-    --ink-500:#847a65;
-    --ink-400:#a89c85;
-    --ink-200:#e6dfd0;
-    --ink-100:#efe9db;
-    --ink-50:#f7f3ea;
+    /* Ink - Adminator's slate text/background scale */
+    --ink-950:#0B1120;
+    --ink-900:#1E293B;
+    --ink-800:#293548;
+    --ink-700:#475569;
+    --ink-600:#64748B;
+    --ink-500:#94A3B8;
+    --ink-400:#B0BAC9;
+    --ink-200:#E4E8EF;
+    --ink-100:#EEF1F5;
+    --ink-50:#F1F5F9;
 
     /* Status */
-    --success:#2f7d4f;
-    --success-bg:#e9f6ee;
-    --warning:#b5750f;
-    --warning-bg:#fbf1de;
-    --danger:#c1401f;
-    --danger-bg:#fbeae4;
-    --info:#3a6a94;
-    --info-bg:#eaf2f8;
-    --violet:#7a4f96;
-    --violet-bg:#f3edf7;
+    --success:#10B981;
+    --success-bg:#ECFDF5;
+    --warning:#F59E0B;
+    --warning-bg:#FFFBEB;
+    --danger:#EF4444;
+    --danger-bg:#FEF2F2;
+    --info:#0EA5E9;
+    --info-bg:#F0F9FF;
+    --violet:#8B5CF6;
+    --violet-bg:#F5F3FF;
 
     /* Surface */
-    --surface:#ffffff;
-    --surface-app:#f4f0e6;
-    --border-soft:#e4dcc8;
+    --surface:#FFFFFF;
+    --surface-app:#F0F4F8;
+    --border-soft:#E4E8EF;
 
-    /* Elevation - warm-tinted shadows to match the neutrals */
-    --shadow-xs:0 1px 2px rgba(23,20,15,.07);
-    --shadow-sm:0 2px 10px rgba(23,20,15,.07);
-    --shadow-md:0 10px 28px rgba(23,20,15,.10);
-    --shadow-lg:0 20px 46px rgba(23,20,15,.16);
-    --shadow-brand:0 10px 24px rgba(44,122,117,.28);
+    /* Elevation - Adminator's exact shadow values */
+    --shadow-xs:0 1px 2px 0 rgb(15 23 42 / 0.04);
+    --shadow-sm:0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.04);
+    --shadow-md:0 4px 6px -1px rgb(15 23 42 / 0.07), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+    --shadow-lg:0 10px 15px -3px rgb(15 23 42 / 0.08), 0 4px 6px -4px rgb(15 23 42 / 0.05);
+    --shadow-brand:0 4px 10px -2px rgba(37,99,235,.40);
 
-    /* Radius - a touch more structured / less bubbly */
+    /* Radius */
     --r-sm:6px;
-    --r-md:10px;
-    --r-lg:14px;
-    --r-xl:18px;
+    --r-md:8px;
+    --r-lg:12px;
+    --r-xl:16px;
     --r-pill:999px;
 
-    /* Type */
+    /* Type - Inter + Inter Tight + JetBrains Mono, same as Adminator */
     --font-body:"Inter","Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
-    --font-display:"Space Grotesk","Inter","Segoe UI",sans-serif;
+    --font-display:"Inter Tight","Inter","Segoe UI",sans-serif;
     --font-mono:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
 }
 
 body.dark{
 
-    --surface:#221e17;
-    --surface-app:#17140f;
-    --border-soft:#3a3327;
+    --surface:#141B2D;
+    --surface-app:#0B1120;
+    --border-soft:#222C42;
 
-    --ink-900:#f4efe3;
-    --ink-800:#e6dfd0;
-    --ink-700:#c9bea6;
-    --ink-600:#a89c85;
-    --ink-100:#2b2620;
-    --ink-50:#221e17;
+    --ink-900:#F1F5F9;
+    --ink-800:#E2E8F0;
+    --ink-700:#CBD5E1;
+    --ink-600:#94A3B8;
+    --ink-100:#1A2237;
+    --ink-50:#141B2D;
+
+    --brand-500:#60A5FA;
+    --brand-600:#3B82F6;
 
 }
 
@@ -159,11 +164,11 @@ h1,h2,h3,h4,h5,h6{
 .btn-primary{
     background:linear-gradient(135deg,var(--brand-500),var(--brand-700)) !important;
     border:none !important;
-    box-shadow:0 4px 12px rgba(44,122,117,.25);
+    box-shadow:0 4px 12px rgba(37,99,235,.25);
 }
 
 .btn-primary:hover{
-    box-shadow:0 6px 18px rgba(44,122,117,.35);
+    box-shadow:0 6px 18px rgba(37,99,235,.35);
 }
 
 /* =========================================================
@@ -184,7 +189,7 @@ textarea.form-control{
 .form-control:focus,
 .form-select:focus{
     border-color:var(--brand-500);
-    box-shadow:0 0 0 .18rem rgba(44,122,117,.18);
+    box-shadow:0 0 0 .18rem rgba(37,99,235,.18);
 }
 
 label{
