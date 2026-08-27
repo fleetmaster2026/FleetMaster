@@ -8,6 +8,7 @@ import {
   FaTools,
   FaMoneyBillWave,
   FaCog,
+  FaComments,
 } from "react-icons/fa";
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   { to: "/documents", icon: <FaFileAlt />, label: "RTA Documents" },
   { to: "/breakdowns", icon: <FaTools />, label: "Breakdown Register" },
   { to: "/fines", icon: <FaMoneyBillWave />, label: "Fine Register" },
+  { to: "/chat", icon: <FaComments />, label: "Chat" },
 ];
 
 const Sidebar = () => {

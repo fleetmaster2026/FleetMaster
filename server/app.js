@@ -2,10 +2,13 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const db = require("./database/db");
+const { authenticate, requireAdminForWrites } = require("./middleware/auth");
 
 // =========================
 // Routes
 // =========================
+const authRoutes = require("./routes/authRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 const vehicleRoutes = require("./routes/vehicles");
 const siteEngineerRoutes = require("./routes/siteEngineerRoutes");
 const monthlyUtilisationRoutes = require("./routes/monthlyUtilisation");
@@ -38,14 +41,20 @@ app.use(
 // =========================
 // API Routes
 // =========================
-app.use("/api/vehicles", vehicleRoutes);
-app.use("/api/site-engineers", siteEngineerRoutes);
-app.use("/api/monthly-utilisation", monthlyUtilisationRoutes);
-app.use("/api/rta-documents", rtaDocumentRoutes);
-app.use("/api/breakdowns", breakdownRoutes);
-app.use("/api/fines", fineRoutes);
-app.use("/api/settings", settingsRoutes);
-app.use("/api/database", databaseRoutes);
+// Auth is public (login itself can't require a token). Chat requires a
+// valid login but is open to BOTH admin and read-only accounts. Every data
+// route requires a valid login, and blocks write methods (POST/PUT/DELETE)
+// for anyone who isn't role='admin' - see middleware/auth.js.
+app.use("/api/auth", authRoutes);
+app.use("/api/chat", authenticate, chatRoutes);
+app.use("/api/vehicles", authenticate, requireAdminForWrites, vehicleRoutes);
+app.use("/api/site-engineers", authenticate, requireAdminForWrites, siteEngineerRoutes);
+app.use("/api/monthly-utilisation", authenticate, requireAdminForWrites, monthlyUtilisationRoutes);
+app.use("/api/rta-documents", authenticate, requireAdminForWrites, rtaDocumentRoutes);
+app.use("/api/breakdowns", authenticate, requireAdminForWrites, breakdownRoutes);
+app.use("/api/fines", authenticate, requireAdminForWrites, fineRoutes);
+app.use("/api/settings", authenticate, requireAdminForWrites, settingsRoutes);
+app.use("/api/database", authenticate, requireAdminForWrites, databaseRoutes);
 // =========================
 // Root
 // =========================

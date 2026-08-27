@@ -10,13 +10,19 @@ import "./layout.css";
 import "./styles/shared.css";
 import App from "./App";
 import { ThemeProvider } from "./context/ThemeContext";
+import { AuthProvider } from "./context/AuthContext";
+import { installAuthFetch } from "./utils/httpAuth";
+
+installAuthFetch();
 
 ReactDOM.createRoot(
   document.getElementById("root")!
 ).render(
   <React.StrictMode>
     <ThemeProvider>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

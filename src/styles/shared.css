@@ -1164,3 +1164,220 @@ body.dark .login-form input {
   border-color: var(--border-soft, #3a3327);
   color: var(--ink-900, #f4efe3);
 }
+
+/* =========================================================
+   Auth: header user chip + logout button
+   ========================================================= */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+}
+
+.header-eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-date-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #666;
+  background: #f2f4f7;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+body.dark .header-date-chip {
+  background: #2a2f3a;
+  color: #ccc;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-user-name {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.header-user-role {
+  font-size: 11px;
+  color: #888;
+}
+
+.header-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1f4e78;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.header-logout-btn {
+  border: none;
+  background: #fdecea;
+  color: #c0392b;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.header-logout-btn:hover {
+  background: #f9c9c3;
+}
+
+/* =========================================================
+   Read-only role: hide every action that mutates data.
+   Backend also rejects these regardless (defense in depth) -
+   this just keeps the UI honest for read-only accounts.
+   ========================================================= */
+body.role-user .save-btn,
+body.role-user .edit-btn,
+body.role-user .delete-btn,
+body.role-user .excel-import-btn,
+body.role-user .import-btn,
+body.role-user .add-btn,
+body.role-user .restore-btn,
+body.role-user .backup-delete-btn {
+  display: none !important;
+}
+
+/* =========================================================
+   Chat page
+   ========================================================= */
+.chat-card {
+  display: flex;
+  flex-direction: column;
+  height: 70vh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-empty {
+  margin: auto;
+  color: #999;
+  font-size: 14px;
+}
+
+.chat-bubble-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.chat-bubble-row.chat-mine {
+  justify-content: flex-end;
+}
+
+.chat-bubble {
+  max-width: 70%;
+  background: #f2f4f7;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.chat-mine .chat-bubble {
+  background: #1f4e78;
+  color: #fff;
+}
+
+body.dark .chat-bubble {
+  background: #2a2f3a;
+}
+
+.chat-bubble-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  opacity: 0.75;
+  margin-bottom: 2px;
+}
+
+.chat-bubble-name {
+  font-weight: 700;
+}
+
+.chat-badge-admin {
+  background: #ffd54f;
+  color: #6d4c00;
+  border-radius: 8px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.chat-bubble-text {
+  font-size: 14px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+body.dark .chat-input-row {
+  border-top-color: #333a45;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #d7dbe0;
+}
+
+.chat-send-btn {
+  background: #1f4e78;
+  color: #fff;
+  border: none;
+  padding: 0 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

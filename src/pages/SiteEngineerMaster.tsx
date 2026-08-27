@@ -3,7 +3,6 @@ import {
   FaSave,
   FaSyncAlt,
   FaTimes,
-  FaSearch,
   FaEdit,
   FaTrash,
   FaHardHat,
@@ -20,6 +19,10 @@ import {
 
 import ExcelActions from "../components/common/ExcelActions";
 import ColumnFilterHeader from "../components/common/ColumnFilterHeader";
+import RecordsToolbar, {
+  type ToolbarColumn,
+} from "../components/common/RecordsToolbar";
+import { useColumnVisibility } from "../hooks/useColumnVisibility";
 import { useColumnFilters } from "../hooks/useColumnFilters";
 import { printTable } from "../utils/printTable";
 import {
@@ -45,6 +48,22 @@ const siteEngineerColumns: ColumnDef<SiteEngineer>[] = [
   { header: "Project Manager Name", key: "projectManagerName" },
   { header: "PM Contact", key: "pmContact" },
   { header: "PM Email", key: "pmEmail" },
+];
+
+// Columns available in the on-screen table / print - drives both the
+// "which columns to print" checklist and (together with the manual search
+// predicate below) the universal search box.
+const siteEngineerToolbarColumns: ToolbarColumn[] = [
+  { key: "siteLocation", label: "Site Location" },
+  { key: "projectCode", label: "Project Code" },
+  { key: "businessUnit", label: "Business Unit" },
+  { key: "engineerName", label: "Engineer Name" },
+  { key: "mobile", label: "Mobile" },
+  { key: "email", label: "Email" },
+  { key: "designation", label: "Designation" },
+  { key: "projectManagerName", label: "Project Manager" },
+  { key: "pmContact", label: "PM Contact" },
+  { key: "pmEmail", label: "PM Email" },
 ];
 
 const SiteEngineerMaster = () => {
@@ -76,6 +95,13 @@ const SiteEngineerMaster = () => {
 
   const [businessUnitFilter, setBusinessUnitFilter] =
     useState("ALL");
+
+  const {
+    isColumnVisible,
+    toggleColumn,
+    showAllColumns,
+    hideAllColumns,
+  } = useColumnVisibility();
 
   const loadData = async () => {
     try {
@@ -244,28 +270,21 @@ const SiteEngineerMaster = () => {
       const text =
         search.toLowerCase();
 
-      const searchMatch =
-        record.siteLocation
-          .toLowerCase()
-          .includes(text) ||
-        record.projectCode
-          .toLowerCase()
-          .includes(text) ||
-        record.engineerName
-          .toLowerCase()
-          .includes(text) ||
-        record.mobile
-          .toLowerCase()
-          .includes(text) ||
-        record.email
-          .toLowerCase()
-          .includes(text) ||
-        (record.projectManagerName ?? "")
-          .toLowerCase()
-          .includes(text) ||
-        (record.pmContact ?? "")
-          .toLowerCase()
-          .includes(text);
+      // Search across every field on the record - Site Location, Project
+      // Code, Business Unit, Engineer, Mobile, Email, Designation, Project
+      // Manager, PM Contact & PM Email - not just a handful of them.
+      const searchMatch = [
+        record.siteLocation,
+        record.projectCode,
+        record.businessUnit,
+        record.engineerName,
+        record.mobile,
+        record.email,
+        record.designation,
+        record.projectManagerName,
+        record.pmContact,
+        record.pmEmail,
+      ].some((field) => (field ?? "").toLowerCase().includes(text));
 
       const businessMatch =
         businessUnitFilter === "ALL" ||
@@ -511,33 +530,24 @@ const SiteEngineerMaster = () => {
     </div>
 
   </div>
-        <div className="form-card">
-        <h2 className="section-title">
-          <FaSearch />
-          &nbsp; Search & Filters
-        </h2>
-
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Search</label>
-
-            <input
-              placeholder="Site, Project Code, Engineer, Mobile..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Business Unit</label>
-
+      <RecordsToolbar
+        search={search}
+        onSearchChange={setSearch}
+        placeholder="Search Site / Project Code / Business Unit / Engineer / Mobile / Email / Designation / PM..."
+        columns={siteEngineerToolbarColumns}
+        isColumnVisible={isColumnVisible}
+        onToggleColumn={toggleColumn}
+        onShowAllColumns={showAllColumns}
+        onHideAllColumns={() =>
+          hideAllColumns(siteEngineerToolbarColumns.map((col) => col.key))
+        }
+        extraFilters={
+          <div className="form-group" style={{ minWidth: 160 }}>
             <select
               value={businessUnitFilter}
-              onChange={(e) =>
-                setBusinessUnitFilter(e.target.value)
-              }
+              onChange={(e) => setBusinessUnitFilter(e.target.value)}
             >
-              <option value="ALL">All</option>
+              <option value="ALL">All Business Units</option>
 
               {businessUnits.map((unit) => (
                 <option key={unit} value={unit}>
@@ -546,27 +556,8 @@ const SiteEngineerMaster = () => {
               ))}
             </select>
           </div>
-
-          <div
-            className="form-group"
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-            }}
-          >
-            <button
-              className="clear-btn"
-              onClick={() => {
-                setSearch("");
-                setBusinessUnitFilter("ALL");
-              }}
-            >
-              <FaTimes />
-              &nbsp; Clear Filters
-            </button>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {columnFilters.activeFilterCount > 0 && (
         <div className="active-filters-bar no-print">
@@ -618,76 +609,96 @@ const SiteEngineerMaster = () => {
           <thead>
             <tr>
               <th>Sr.No</th>
-              <ColumnFilterHeader
-                columnKey="siteLocation"
-                label="Site Location"
-                allValues={columnFilters.getUniqueValues("siteLocation")}
-                selected={columnFilters.filters.siteLocation}
-                onApply={(v) => columnFilters.setColumnFilter("siteLocation", v)}
-              />
-              <ColumnFilterHeader
-                columnKey="projectCode"
-                label="Project Code"
-                allValues={columnFilters.getUniqueValues("projectCode")}
-                selected={columnFilters.filters.projectCode}
-                onApply={(v) => columnFilters.setColumnFilter("projectCode", v)}
-              />
-              <ColumnFilterHeader
-                columnKey="businessUnit"
-                label="Business Unit"
-                allValues={columnFilters.getUniqueValues("businessUnit")}
-                selected={columnFilters.filters.businessUnit}
-                onApply={(v) => columnFilters.setColumnFilter("businessUnit", v)}
-              />
-              <ColumnFilterHeader
-                columnKey="engineerName"
-                label="Engineer"
-                allValues={columnFilters.getUniqueValues("engineerName")}
-                selected={columnFilters.filters.engineerName}
-                onApply={(v) => columnFilters.setColumnFilter("engineerName", v)}
-              />
-              <ColumnFilterHeader
-                columnKey="mobile"
-                label="Mobile"
-                allValues={columnFilters.getUniqueValues("mobile")}
-                selected={columnFilters.filters.mobile}
-                onApply={(v) => columnFilters.setColumnFilter("mobile", v)}
-              />
-              <ColumnFilterHeader
-                columnKey="email"
-                label="Email"
-                allValues={columnFilters.getUniqueValues("email")}
-                selected={columnFilters.filters.email}
-                onApply={(v) => columnFilters.setColumnFilter("email", v)}
-              />
-              <ColumnFilterHeader
-                columnKey="designation"
-                label="Designation"
-                allValues={columnFilters.getUniqueValues("designation")}
-                selected={columnFilters.filters.designation}
-                onApply={(v) => columnFilters.setColumnFilter("designation", v)}
-              />
-              <ColumnFilterHeader
-                columnKey="projectManagerName"
-                label="Project Manager"
-                allValues={columnFilters.getUniqueValues("projectManagerName")}
-                selected={columnFilters.filters.projectManagerName}
-                onApply={(v) => columnFilters.setColumnFilter("projectManagerName", v)}
-              />
-              <ColumnFilterHeader
-                columnKey="pmContact"
-                label="PM Contact"
-                allValues={columnFilters.getUniqueValues("pmContact")}
-                selected={columnFilters.filters.pmContact}
-                onApply={(v) => columnFilters.setColumnFilter("pmContact", v)}
-              />
-              <ColumnFilterHeader
-                columnKey="pmEmail"
-                label="PM Email"
-                allValues={columnFilters.getUniqueValues("pmEmail")}
-                selected={columnFilters.filters.pmEmail}
-                onApply={(v) => columnFilters.setColumnFilter("pmEmail", v)}
-              />
+              {isColumnVisible("siteLocation") && (
+                <ColumnFilterHeader
+                  columnKey="siteLocation"
+                  label="Site Location"
+                  allValues={columnFilters.getUniqueValues("siteLocation")}
+                  selected={columnFilters.filters.siteLocation}
+                  onApply={(v) => columnFilters.setColumnFilter("siteLocation", v)}
+                />
+              )}
+              {isColumnVisible("projectCode") && (
+                <ColumnFilterHeader
+                  columnKey="projectCode"
+                  label="Project Code"
+                  allValues={columnFilters.getUniqueValues("projectCode")}
+                  selected={columnFilters.filters.projectCode}
+                  onApply={(v) => columnFilters.setColumnFilter("projectCode", v)}
+                />
+              )}
+              {isColumnVisible("businessUnit") && (
+                <ColumnFilterHeader
+                  columnKey="businessUnit"
+                  label="Business Unit"
+                  allValues={columnFilters.getUniqueValues("businessUnit")}
+                  selected={columnFilters.filters.businessUnit}
+                  onApply={(v) => columnFilters.setColumnFilter("businessUnit", v)}
+                />
+              )}
+              {isColumnVisible("engineerName") && (
+                <ColumnFilterHeader
+                  columnKey="engineerName"
+                  label="Engineer"
+                  allValues={columnFilters.getUniqueValues("engineerName")}
+                  selected={columnFilters.filters.engineerName}
+                  onApply={(v) => columnFilters.setColumnFilter("engineerName", v)}
+                />
+              )}
+              {isColumnVisible("mobile") && (
+                <ColumnFilterHeader
+                  columnKey="mobile"
+                  label="Mobile"
+                  allValues={columnFilters.getUniqueValues("mobile")}
+                  selected={columnFilters.filters.mobile}
+                  onApply={(v) => columnFilters.setColumnFilter("mobile", v)}
+                />
+              )}
+              {isColumnVisible("email") && (
+                <ColumnFilterHeader
+                  columnKey="email"
+                  label="Email"
+                  allValues={columnFilters.getUniqueValues("email")}
+                  selected={columnFilters.filters.email}
+                  onApply={(v) => columnFilters.setColumnFilter("email", v)}
+                />
+              )}
+              {isColumnVisible("designation") && (
+                <ColumnFilterHeader
+                  columnKey="designation"
+                  label="Designation"
+                  allValues={columnFilters.getUniqueValues("designation")}
+                  selected={columnFilters.filters.designation}
+                  onApply={(v) => columnFilters.setColumnFilter("designation", v)}
+                />
+              )}
+              {isColumnVisible("projectManagerName") && (
+                <ColumnFilterHeader
+                  columnKey="projectManagerName"
+                  label="Project Manager"
+                  allValues={columnFilters.getUniqueValues("projectManagerName")}
+                  selected={columnFilters.filters.projectManagerName}
+                  onApply={(v) => columnFilters.setColumnFilter("projectManagerName", v)}
+                />
+              )}
+              {isColumnVisible("pmContact") && (
+                <ColumnFilterHeader
+                  columnKey="pmContact"
+                  label="PM Contact"
+                  allValues={columnFilters.getUniqueValues("pmContact")}
+                  selected={columnFilters.filters.pmContact}
+                  onApply={(v) => columnFilters.setColumnFilter("pmContact", v)}
+                />
+              )}
+              {isColumnVisible("pmEmail") && (
+                <ColumnFilterHeader
+                  columnKey="pmEmail"
+                  label="PM Email"
+                  allValues={columnFilters.getUniqueValues("pmEmail")}
+                  selected={columnFilters.filters.pmEmail}
+                  onApply={(v) => columnFilters.setColumnFilter("pmEmail", v)}
+                />
+              )}
               <th className="no-print">Action</th>
             </tr>
           </thead>
@@ -695,7 +706,15 @@ const SiteEngineerMaster = () => {
           <tbody>
             {filteredAndColumnFilteredRecords.length === 0 ? (
               <tr>
-                <td colSpan={12} style={{ textAlign: "center" }}>
+                <td
+                  colSpan={
+                    2 +
+                    siteEngineerToolbarColumns.filter((col) =>
+                      isColumnVisible(col.key)
+                    ).length
+                  }
+                  style={{ textAlign: "center" }}
+                >
                   No Records Found
                 </td>
               </tr>
@@ -710,16 +729,16 @@ const SiteEngineerMaster = () => {
                   }
                 >
                   <td>{index + 1}</td>
-                  <td>{record.siteLocation}</td>
-                  <td>{record.projectCode}</td>
-                  <td>{record.businessUnit}</td>
-                  <td>{record.engineerName}</td>
-                  <td>{record.mobile}</td>
-                  <td>{record.email}</td>
-                  <td>{record.designation}</td>
-                  <td>{record.projectManagerName}</td>
-                  <td>{record.pmContact}</td>
-                  <td>{record.pmEmail}</td>
+                  {isColumnVisible("siteLocation") && <td>{record.siteLocation}</td>}
+                  {isColumnVisible("projectCode") && <td>{record.projectCode}</td>}
+                  {isColumnVisible("businessUnit") && <td>{record.businessUnit}</td>}
+                  {isColumnVisible("engineerName") && <td>{record.engineerName}</td>}
+                  {isColumnVisible("mobile") && <td>{record.mobile}</td>}
+                  {isColumnVisible("email") && <td>{record.email}</td>}
+                  {isColumnVisible("designation") && <td>{record.designation}</td>}
+                  {isColumnVisible("projectManagerName") && <td>{record.projectManagerName}</td>}
+                  {isColumnVisible("pmContact") && <td>{record.pmContact}</td>}
+                  {isColumnVisible("pmEmail") && <td>{record.pmEmail}</td>}
 
                   <td className="no-print">
                     <button

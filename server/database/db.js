@@ -142,6 +142,45 @@ async function runSql(sql) {
 
 async function setupSchema() {
   await runSql(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      passwordHash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Auto-seed a default admin account (admin / admin123) the very first
+  // time this runs against an empty users table, so login always works out
+  // of the box. Change the password from a real account after first login.
+  try {
+    const existing = await client.execute(`SELECT COUNT(*) as count FROM users`);
+    const count = Number(existing.rows[0]?.count ?? 0);
+    if (count === 0) {
+      const bcrypt = require("bcryptjs");
+      const hash = bcrypt.hashSync("admin123", 10);
+      await client.execute({
+        sql: `INSERT INTO users (username, passwordHash, role) VALUES ('admin', ?, 'admin')`,
+        args: [hash],
+      });
+      console.log("✅ Default admin account created (admin / admin123) - please change this password.");
+    }
+  } catch (err) {
+    console.error("Admin auto-seed check failed:", err.message);
+  }
+
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL,
+      role TEXT,
+      message TEXT NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await runSql(`
     CREATE TABLE IF NOT EXISTS vehicles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       vehicleNo TEXT,
