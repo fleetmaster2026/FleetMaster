@@ -1179,7 +1179,7 @@ body.dark .login-form input {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #888;
+  color: var(--ink-500);
 }
 
 .header-right {
@@ -1193,15 +1193,10 @@ body.dark .login-form input {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #666;
-  background: #f2f4f7;
+  color: var(--ink-700);
+  background: var(--ink-100);
   padding: 6px 12px;
-  border-radius: 20px;
-}
-
-body.dark .header-date-chip {
-  background: #2a2f3a;
-  color: #ccc;
+  border-radius: var(--r-pill);
 }
 
 .header-user {
@@ -1214,42 +1209,44 @@ body.dark .header-date-chip {
   font-weight: 600;
   font-size: 14px;
   line-height: 1.2;
+  color: var(--ink-900);
 }
 
 .header-user-role {
   font-size: 11px;
-  color: #888;
+  color: var(--ink-500);
 }
 
 .header-avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #1f4e78;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   font-size: 14px;
+  box-shadow: var(--shadow-brand);
 }
 
 .header-logout-btn {
   border: none;
-  background: #fdecea;
-  color: #c0392b;
+  background: var(--danger-bg);
+  color: var(--danger);
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: filter 0.15s ease;
 }
 
 .header-logout-btn:hover {
-  background: #f9c9c3;
+  filter: brightness(0.94);
 }
 
 /* =========================================================
@@ -1290,7 +1287,7 @@ body.role-user .backup-delete-btn {
 
 .chat-empty {
   margin: auto;
-  color: #999;
+  color: var(--ink-500);
   font-size: 14px;
 }
 
@@ -1305,18 +1302,14 @@ body.role-user .backup-delete-btn {
 
 .chat-bubble {
   max-width: 70%;
-  background: #f2f4f7;
-  border-radius: 12px;
+  background: var(--ink-100);
+  border-radius: var(--r-md);
   padding: 8px 12px;
 }
 
 .chat-mine .chat-bubble {
-  background: #1f4e78;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
   color: #fff;
-}
-
-body.dark .chat-bubble {
-  background: #2a2f3a;
 }
 
 .chat-bubble-meta {
@@ -1324,7 +1317,7 @@ body.dark .chat-bubble {
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  opacity: 0.75;
+  opacity: 0.8;
   margin-bottom: 2px;
 }
 
@@ -1333,9 +1326,9 @@ body.dark .chat-bubble {
 }
 
 .chat-badge-admin {
-  background: #ffd54f;
-  color: #6d4c00;
-  border-radius: 8px;
+  background: var(--accent-amber);
+  color: var(--ink-950);
+  border-radius: var(--r-pill);
   padding: 1px 6px;
   font-size: 10px;
   font-weight: 700;
@@ -1351,45 +1344,50 @@ body.dark .chat-bubble {
   display: flex;
   gap: 10px;
   padding: 14px 20px;
-  border-top: 1px solid #e5e7eb;
-}
-
-body.dark .chat-input-row {
-  border-top-color: #333a45;
+  border-top: 1px solid var(--border-soft);
 }
 
 .chat-input-row input {
   flex: 1;
   padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #d7dbe0;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  color: var(--ink-800);
 }
 
 .chat-send-btn {
-  background: #1f4e78;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
   color: #fff;
   border: none;
   padding: 0 20px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(44,122,117,.25);
+}
+
+.chat-send-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 18px rgba(44,122,117,.35);
 }
 
 .chat-send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .chat-delete-btn {
   border: none;
   background: transparent;
-  color: #c0392b;
+  color: var(--danger);
   cursor: pointer;
   padding: 0 0 0 4px;
   font-size: 11px;
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 .chat-delete-btn:hover {
@@ -1400,11 +1398,12 @@ body.dark .chat-input-row {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: #1f1f1f;
-  color: #fff;
+  background: var(--ink-900);
+  color: var(--surface);
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: var(--r-md);
   font-size: 13px;
   z-index: 9999;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  box-shadow: var(--shadow-lg);
+  max-width: 280px;
 }
