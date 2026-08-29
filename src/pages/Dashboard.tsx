@@ -382,11 +382,16 @@ return (
 
     <div className="card-header attention-header d-flex justify-content-between align-items-center">
 
-        <h5 className="mb-0">
-            <FaExclamationTriangle /> Attention Required
-        </h5>
+        <div>
+            <h5 className="mb-0">
+                <FaExclamationTriangle /> Attention Required
+            </h5>
+            <div className="attention-subtitle">
+                Documents expired or expiring within 30 days
+            </div>
+        </div>
 
-        <span className="badge bg-light text-danger fs-6">
+        <span className="attention-count-badge">
             {attentionList.length}
         </span>
 
@@ -442,9 +447,10 @@ return (
                                             : "doc-chip doc-chip-expiring"
                                     }
                                 >
+                                    <span className="doc-chip-dot" />
                                     {doc.isExpired
-                                        ? `🔴 ${doc.document}`
-                                        : `🟠 ${doc.document} · ${doc.status}`}
+                                        ? doc.document
+                                        : `${doc.document} · ${doc.status}`}
                                 </span>
                             ))}
                         </div>
