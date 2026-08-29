@@ -44,4 +44,22 @@ router.post("/", (req, res) => {
   );
 });
 
+// =========================
+// DELETE a message - admin only (moderation)
+// =========================
+router.delete("/:id", (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Only admins can delete messages." });
+  }
+
+  const { id } = req.params;
+
+  db.run(`DELETE FROM chat_messages WHERE id = ?`, [id], function (err) {
+    if (err) {
+      return res.status(500).json({ error: "Failed to delete message." });
+    }
+    res.json({ success: true });
+  });
+});
+
 module.exports = router;

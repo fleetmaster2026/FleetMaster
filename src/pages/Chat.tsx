@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { FaComments, FaPaperPlane } from "react-icons/fa";
-import { getMessages, sendMessage, type ChatMessage } from "../services/chatApi";
+import { FaComments, FaPaperPlane, FaTrash } from "react-icons/fa";
+import { getMessages, sendMessage, deleteMessage, type ChatMessage } from "../services/chatApi";
 import { useAuth } from "../context/AuthContext";
 
 const POLL_INTERVAL_MS = 4000;
 
 const Chat = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -49,6 +49,17 @@ const Chat = () => {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete this message for everyone?")) return;
+    try {
+      await deleteMessage(id);
+      await loadMessages();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete message.");
+    }
+  };
+
   const formatTime = (iso: string) => {
     const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z");
     if (isNaN(d.getTime())) return "";
@@ -83,6 +94,16 @@ const Chat = () => {
                       <span className="chat-badge-admin">Admin</span>
                     )}
                     <span className="chat-bubble-time">{formatTime(m.createdAt)}</span>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className="chat-delete-btn"
+                        onClick={() => handleDelete(m.id)}
+                        title="Delete message"
+                      >
+                        <FaTrash />
+                      </button>
+                    )}
                   </div>
                   <div className="chat-bubble-text">{m.message}</div>
                 </div>

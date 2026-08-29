@@ -1381,3 +1381,30 @@ body.dark .chat-input-row {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.chat-delete-btn {
+  border: none;
+  background: transparent;
+  color: #c0392b;
+  cursor: pointer;
+  padding: 0 0 0 4px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.chat-delete-btn:hover {
+  opacity: 1;
+}
+
+.idle-logout-banner {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1f1f1f;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}

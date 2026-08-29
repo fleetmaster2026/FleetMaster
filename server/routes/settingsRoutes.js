@@ -1,19 +1,19 @@
-const upload = require("../middleware/uploadLogo");
-const express = require("express");
+    const upload = require("../middleware/uploadLogo");
+    const express = require("express");
 
-const router = express.Router();
+    const router = express.Router();
 
-const settingsController = require("../controllers/settingsController");
+    const settingsController = require("../controllers/settingsController");
 
-// GET Settings
-router.get("/", settingsController.getSettings);
+    // GET Settings
+    router.get("/", settingsController.getSettings);
 
-// UPDATE Settings
-router.put("/", settingsController.updateSettings);
-router.post(
-    "/upload-logo",
-    upload.single("logo"),
-    settingsController.uploadLogo
-);
+    // UPDATE Settings
+    router.put("/", settingsController.updateSettings);
+    router.post(
+        "/upload-logo",
+        upload.single("logo"),
+        settingsController.uploadLogo
+    );
 
-module.exports = router;
+    module.exports = router;

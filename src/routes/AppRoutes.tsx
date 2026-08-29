@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
+import IdleLogoutGuard from "./IdleLogoutGuard";
 
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
@@ -17,6 +18,7 @@ import Chat from "../pages/Chat";
 const AppRoutes = () => {
   return (
     <BrowserRouter>
+      <IdleLogoutGuard />
       <Routes>
         {/* Public */}
         <Route path="/login" element={<Login />} />

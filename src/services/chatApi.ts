@@ -29,3 +29,11 @@ export const sendMessage = async (message: string): Promise<void> => {
     throw new Error("Failed to send message");
   }
 };
+
+export const deleteMessage = async (id: number): Promise<void> => {
+  const response = await fetch(`${API}/${id}`, { method: "DELETE" });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete message");
+  }
+};
