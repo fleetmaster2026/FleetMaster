@@ -43,7 +43,18 @@ function normalizeArgs(params) {
   // sqlite3 call sites in this project always pass either an array of
   // positional "?" params, or omit params entirely.
   if (!params || typeof params === "function") return [];
-  return params;
+
+  // Unlike the old `sqlite3` package (which silently treated a missing/
+  // undefined bind value as NULL), @libsql/client throws:
+  //   TypeError: undefined cannot be passed as argument to the database
+  // for ANY `undefined` value in the args array. Several routes destructure
+  // fields from req.body that the current frontend forms don't actually
+  // send (e.g. vehicles.js's rcNumber/enableKm/enableHours, breakdownRoutes.js
+  // and fineRoutes.js's requireFund) — those come through as `undefined` and
+  // previously crashed every INSERT/UPDATE that included them (both single
+  // Save and bulk Import). Converting undefined -> null here matches the old
+  // sqlite3 behavior and fixes that for every route, present and future.
+  return params.map((value) => (value === undefined ? null : value));
 }
 
 const db = {
@@ -134,7 +145,7 @@ async function runSql(sql) {
     // Many of these are intentionally "safe to fail" migrations
     // (duplicate column, etc.) - mirror the old code's behavior of
     // swallowing those errors, but log anything unexpected.
-    if (!/duplicate column|already exists/i.test(err.message)) {
+    if (!/duplicate column|already exists|no such column/i.test(err.message)) {
       console.error("Schema step failed:", err.message);
     }
   }
@@ -205,6 +216,12 @@ async function setupSchema() {
   `);
   await runSql(`ALTER TABLE vehicles ADD COLUMN projectCode TEXT`);
   await runSql(`ALTER TABLE vehicles ADD COLUMN owner TEXT`);
+  // These two were previously only added by hand on the live database and
+  // were missing from this migration script, so vehicles.js's INSERT/UPDATE
+  // (which both reference enableKm/enableHours) failed on any fresh/rebuilt
+  // database with "table vehicles has no column named enableKm".
+  await runSql(`ALTER TABLE vehicles ADD COLUMN enableKm INTEGER DEFAULT 1`);
+  await runSql(`ALTER TABLE vehicles ADD COLUMN enableHours INTEGER DEFAULT 1`);
 
   await runSql(`
     CREATE TABLE IF NOT EXISTS sites (
