@@ -54,3 +54,26 @@ export const deleteVehicle = async (id: number): Promise<void> => {
     throw new Error("Failed to delete vehicle");
   }
 };
+
+// Wipes every existing vehicle and inserts the given list in a single
+// atomic server-side transaction (see /bulk-replace on the backend).
+// Used by the Excel import flow instead of one delete/add HTTP request
+// per row, which was slow enough on a large fleet to freeze the tab.
+export const bulkReplaceVehicles = async (
+  vehicles: Omit<Vehicle, "id">[]
+): Promise<{ success: boolean; added: number }> => {
+  const response = await fetch(`${API}/bulk-replace`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ vehicles }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || "Failed to import vehicles");
+  }
+
+  return response.json();
+};

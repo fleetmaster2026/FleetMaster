@@ -7,6 +7,7 @@ import {
   addVehicle,
   updateVehicle,
   deleteVehicle,
+  bulkReplaceVehicles,
 } from "../services/vehicleApi";
 
 import VehicleForm from "../components/vehicles/VehicleForm";
@@ -227,25 +228,55 @@ useEffect(() => {
         uniqueRows.set(String(row.vehicleNo).trim().toLowerCase(), row)
       );
 
-      const existing = await getVehicles();
-      for (const v of existing) {
-        if (v.id) await deleteVehicle(v.id);
-      }
+      // Cross-reference Site & Engineer master: whenever the imported row
+      // is missing Site, Project Code, or Engineer, fill it in from the
+      // matching Site & Engineer record instead of leaving it blank.
+      // Matched first by Project Code (unique per site), falling back to
+      // Site name if only that's present. Values already in the sheet are
+      // never overwritten.
+      const enrichRow = (row: Partial<Vehicle>): Partial<Vehicle> => {
+        const projectCode = String(row.projectCode || "").trim();
+        const site = String(row.site || "").trim();
 
-      let added = 0;
-      for (const row of uniqueRows.values()) {
-        const { id, ...data } = row as Vehicle;
+        const match =
+          (projectCode &&
+            siteEngineers.find(
+              (se) => se.projectCode.trim() === projectCode
+            )) ||
+          (site &&
+            siteEngineers.find(
+              (se) => se.siteLocation.trim() === site
+            )) ||
+          undefined;
 
-        await addVehicle(data as Omit<Vehicle, "id">);
-        added++;
-      }
+        if (!match) return row;
+
+        return {
+          ...row,
+          site: row.site || match.siteLocation,
+          projectCode: row.projectCode || match.projectCode,
+          engineer: row.engineer || match.engineerName,
+        };
+      };
+
+      // Single atomic request instead of one delete/add HTTP call per
+      // row - hundreds of sequential round trips was slow enough on a
+      // large fleet to freeze the browser tab (Chrome's "Page
+      // Unresponsive" dialog) and could leave data half-imported if any
+      // one request failed partway through.
+      const rowsToInsert = Array.from(uniqueRows.values()).map((row) => {
+        const { id, ...data } = enrichRow(row) as Vehicle;
+        return data as Omit<Vehicle, "id">;
+      });
+
+      const result = await bulkReplaceVehicles(rowsToInsert);
 
       await loadData();
 
       const skippedDuplicates = imported.length - uniqueRows.size;
 
       alert(
-        `Import Complete - data replaced.\nRecords added: ${added}${
+        `Import Complete - data replaced.\nRecords added: ${result.added}${
           skippedDuplicates
             ? `\nDuplicate rows in file skipped: ${skippedDuplicates}`
             : ""

@@ -58,8 +58,14 @@ export function readExcelFile(
 
     reader.onload = (event) => {
       try {
-        const binaryStr = event.target?.result;
-        const workbook = XLSX.read(binaryStr, { type: "binary" });
+        const buffer = event.target?.result as ArrayBuffer;
+        // ArrayBuffer + { type: "array" } is SheetJS's recommended way to
+        // read a browser-uploaded file - unlike the older
+        // readAsBinaryString/{type:"binary"} pair, it reads the file as raw
+        // bytes rather than routing them through a JS string first, so it
+        // can't mangle files that happen to contain byte sequences that
+        // don't round-trip cleanly through String.fromCharCode.
+        const workbook = XLSX.read(buffer, { type: "array" });
 
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
@@ -77,7 +83,7 @@ export function readExcelFile(
 
     reader.onerror = () => reject(reader.error);
 
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   });
 }
 

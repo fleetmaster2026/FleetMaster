@@ -574,21 +574,15 @@ const AGE_STATUS_COLORS: Record<string, string> = {
 // category attached here, so the funnel filter on those columns lets you
 // tick "Expired" / "Expiring Soon" / "Valid" / "No Date" etc. instead of
 // a long list of mostly-unique raw dates.
-const recordsWithStatus = filteredRecords.map((r) => {
-  const matchedVehicle = vehicles.find((v) => v.vehicleNo === r.vehicleNo);
-
-  return {
-    ...r,
-    vehicleName: matchedVehicle?.vehicleName || "",
-    vehicleType: matchedVehicle?.vehicleType || "",
-    vehicleAgeStatus: getAgeStatus(r.registrationDate),
-    insuranceStatus: getExpiryStatus(r.insuranceExpiry),
-    fitnessStatus: getExpiryStatus(r.fitnessExpiry),
-    permitStatus: getExpiryStatus(r.permitExpiry),
-    pollutionStatus: getExpiryStatus(r.pollutionExpiry),
-    taxStatus: getExpiryStatus(r.taxExpiry),
-  };
-});
+const recordsWithStatus = filteredRecords.map((r) => ({
+  ...r,
+  vehicleAgeStatus: getAgeStatus(r.registrationDate),
+  insuranceStatus: getExpiryStatus(r.insuranceExpiry),
+  fitnessStatus: getExpiryStatus(r.fitnessExpiry),
+  permitStatus: getExpiryStatus(r.permitExpiry),
+  pollutionStatus: getExpiryStatus(r.pollutionExpiry),
+  taxStatus: getExpiryStatus(r.taxExpiry),
+}));
 
 const columnFilters = useColumnFilters(recordsWithStatus);
 const displayedRecords = columnFilters.applyFilters(recordsWithStatus);
@@ -598,27 +592,19 @@ const displayedRecords = columnFilters.applyFilters(recordsWithStatus);
 // only - not statusFilter itself, otherwise the other cards would
 // collapse toward 0 the moment one tab was selected.
 const cardRecords = columnFilters.applyFilters(
-  searchFilteredRecords.map((r) => {
-    const matchedVehicle = vehicles.find((v) => v.vehicleNo === r.vehicleNo);
-
-    return {
-      ...r,
-      vehicleName: matchedVehicle?.vehicleName || "",
-      vehicleType: matchedVehicle?.vehicleType || "",
-      vehicleAgeStatus: getAgeStatus(r.registrationDate),
-      insuranceStatus: getExpiryStatus(r.insuranceExpiry),
-      fitnessStatus: getExpiryStatus(r.fitnessExpiry),
-      permitStatus: getExpiryStatus(r.permitExpiry),
-      pollutionStatus: getExpiryStatus(r.pollutionExpiry),
-      taxStatus: getExpiryStatus(r.taxExpiry),
-    };
-  })
+  searchFilteredRecords.map((r) => ({
+    ...r,
+    vehicleAgeStatus: getAgeStatus(r.registrationDate),
+    insuranceStatus: getExpiryStatus(r.insuranceExpiry),
+    fitnessStatus: getExpiryStatus(r.fitnessExpiry),
+    permitStatus: getExpiryStatus(r.permitExpiry),
+    pollutionStatus: getExpiryStatus(r.pollutionExpiry),
+    taxStatus: getExpiryStatus(r.taxExpiry),
+  }))
 );
 
 const rtaFilterColumns = [
   { key: "vehicleNo", label: "Vehicle" },
-  { key: "vehicleName", label: "Vehicle Name" },
-  { key: "vehicleType", label: "Vehicle Type" },
   { key: "registeringRTO", label: "Registering RTO" },
   { key: "site", label: "Site" },
   { key: "engineer", label: "Engineer" },
@@ -1086,24 +1072,8 @@ cardRecords.forEach((item) => {
                   onApply={(v) => columnFilters.setColumnFilter("vehicleNo", v)}
                 />
               )}
-              {isColumnVisible("vehicleName") && (
-                <ColumnFilterHeader
-                  columnKey="vehicleName"
-                  label="Vehicle Name"
-                  allValues={columnFilters.getUniqueValues("vehicleName")}
-                  selected={columnFilters.filters.vehicleName}
-                  onApply={(v) => columnFilters.setColumnFilter("vehicleName", v)}
-                />
-              )}
-              {isColumnVisible("vehicleType") && (
-                <ColumnFilterHeader
-                  columnKey="vehicleType"
-                  label="Vehicle Type"
-                  allValues={columnFilters.getUniqueValues("vehicleType")}
-                  selected={columnFilters.filters.vehicleType}
-                  onApply={(v) => columnFilters.setColumnFilter("vehicleType", v)}
-                />
-              )}
+              {isColumnVisible("vehicleName") && <th>Vehicle Name</th>}
+              {isColumnVisible("vehicleType") && <th>Vehicle Type</th>}
               {isColumnVisible("registeringRTO") && (
                 <ColumnFilterHeader
                   columnKey="registeringRTO"
@@ -1220,11 +1190,17 @@ cardRecords.forEach((item) => {
                 {isColumnVisible("vehicleNo") && <td>{item.vehicleNo}</td>}
 
                 {isColumnVisible("vehicleName") && (
-                  <td>{item.vehicleName || "-"}</td>
+                  <td>
+                    {vehicles.find((v) => v.vehicleNo === item.vehicleNo)
+                      ?.vehicleName || "-"}
+                  </td>
                 )}
 
                 {isColumnVisible("vehicleType") && (
-                  <td>{item.vehicleType || "-"}</td>
+                  <td>
+                    {vehicles.find((v) => v.vehicleNo === item.vehicleNo)
+                      ?.vehicleType || "-"}
+                  </td>
                 )}
 
                 {isColumnVisible("registeringRTO") && (

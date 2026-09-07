@@ -185,6 +185,88 @@ router.put("/:id", (req, res) => {
 });
 
 // =========================
+// BULK REPLACE VEHICLES (Excel import)
+// Wipes every existing vehicle and inserts the given list, all as ONE
+// atomic transaction in a single round trip to the database - instead
+// of the old approach of the frontend awaiting one delete/insert HTTP
+// request per row, which took minutes and could freeze the browser tab
+// on a large fleet, and left data half-imported if it failed partway.
+// =========================
+router.post("/bulk-replace", async (req, res) => {
+  const incoming = Array.isArray(req.body.vehicles) ? req.body.vehicles : [];
+
+  if (incoming.length === 0) {
+    return res.status(400).json({ error: "No vehicles provided." });
+  }
+
+  try {
+    const statements = [
+      { sql: "DELETE FROM vehicles", args: [] },
+      ...incoming.map((row) => {
+        const data = normalizeObject(row);
+
+        const {
+          vehicleNo,
+          vehicleName,
+          vehicleType,
+          owner,
+          manufacturer,
+          rcNumber,
+          registeringRTO,
+          registrationDate,
+          chassisNo,
+          engineNo,
+          fuelType,
+          projectCode,
+          site,
+          engineer,
+          enableKm,
+          enableHours,
+          targetKm,
+          targetHours,
+        } = data;
+
+        return {
+          sql: `INSERT INTO vehicles (
+            vehicleNo, vehicleName, vehicleType, owner, manufacturer,
+            rcNumber, registeringRTO, registrationDate, chassisNo,
+            engineNo, fuelType, projectCode, site, engineer,
+            enableKm, enableHours, targetKm, targetHours
+          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+          args: [
+            vehicleNo,
+            vehicleName,
+            vehicleType,
+            owner,
+            manufacturer,
+            rcNumber,
+            registeringRTO,
+            registrationDate,
+            chassisNo,
+            engineNo,
+            fuelType,
+            projectCode,
+            site,
+            engineer,
+            enableKm,
+            enableHours,
+            targetKm,
+            targetHours,
+          ],
+        };
+      }),
+    ];
+
+    await db.batch(statements);
+
+    res.json({ success: true, added: incoming.length });
+  } catch (err) {
+    console.error("BULK REPLACE ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =========================
 // DELETE VEHICLE
 // =========================
 router.delete("/:id", (req, res) => {

@@ -129,6 +129,22 @@ const db = {
   serialize(fn) {
     fn();
   },
+
+  // Runs a list of { sql, args } statements as ONE atomic transaction in
+  // a single round trip to Turso, instead of the caller awaiting dozens/
+  // hundreds of separate db.run() calls back-to-back. Built for bulk
+  // import/replace endpoints (e.g. Vehicle Master Excel import), where
+  // doing one HTTP+DB round trip per row was slow enough to freeze the
+  // browser tab on large fleets and left the data half-imported if any
+  // single row failed partway through.
+  async batch(statements) {
+    const prepared = statements.map((s) => ({
+      sql: s.sql,
+      args: normalizeArgs(s.args),
+    }));
+
+    return client.batch(prepared, "write");
+  },
 };
 
 // ---------------------------------------------------------------------
