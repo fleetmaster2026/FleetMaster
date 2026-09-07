@@ -227,37 +227,6 @@ useEffect(() => {
         uniqueRows.set(String(row.vehicleNo).trim().toLowerCase(), row)
       );
 
-      // Cross-reference Site & Engineer master: whenever the imported row
-      // is missing Site, Project Code, or Engineer, fill it in from the
-      // matching Site & Engineer record instead of leaving it blank.
-      // Matched first by Project Code (unique per site), falling back to
-      // Site name if only that's present. Values already in the sheet are
-      // never overwritten.
-      const enrichRow = (row: Partial<Vehicle>): Partial<Vehicle> => {
-        const projectCode = String(row.projectCode || "").trim();
-        const site = String(row.site || "").trim();
-
-        const match =
-          (projectCode &&
-            siteEngineers.find(
-              (se) => se.projectCode.trim() === projectCode
-            )) ||
-          (site &&
-            siteEngineers.find(
-              (se) => se.siteLocation.trim() === site
-            )) ||
-          undefined;
-
-        if (!match) return row;
-
-        return {
-          ...row,
-          site: row.site || match.siteLocation,
-          projectCode: row.projectCode || match.projectCode,
-          engineer: row.engineer || match.engineerName,
-        };
-      };
-
       const existing = await getVehicles();
       for (const v of existing) {
         if (v.id) await deleteVehicle(v.id);
@@ -265,7 +234,7 @@ useEffect(() => {
 
       let added = 0;
       for (const row of uniqueRows.values()) {
-        const { id, ...data } = enrichRow(row) as Vehicle;
+        const { id, ...data } = row as Vehicle;
 
         await addVehicle(data as Omit<Vehicle, "id">);
         added++;
