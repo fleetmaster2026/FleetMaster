@@ -250,12 +250,26 @@ const filteredEngineers =
   }))}
   value={formData.engineer}
   placeholder="Select Engineer"
-  onChange={(value) =>
+  onChange={(value) => {
+    // A site can have more than one Project Code (e.g. different
+    // business units at the same location), so re-sync the Project
+    // Code to whichever Site & Engineer record this specific engineer
+    // actually belongs to, instead of trusting the code picked when
+    // the Site was first chosen.
+    const matchedRecord = siteEngineers.find(
+      (item) =>
+        item.siteLocation === formData.site &&
+        item.engineerName === value
+    );
+
     setFormData({
       ...formData,
       engineer: value,
-    })
-  }
+      projectCode: matchedRecord
+        ? matchedRecord.projectCode
+        : formData.projectCode,
+    });
+  }}
 />
 </div>
 
