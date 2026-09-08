@@ -73,6 +73,54 @@ const rtaToolbarColumns: ToolbarColumn[] = [
   { key: "taxExpiry", label: "Road Tax" },
   { key: "remarks", label: "Remarks" },
 ];
+// A date field that behaves like a normal calendar picker for real dates,
+// but can be switched to free text for cases with no fixed expiry (e.g.
+// Permit often shows "Lifetime"/"LTT", or "N/A"). Starts in whichever mode
+// matches the existing value, so opening a record that already has text in
+// it doesn't silently blank the field out.
+const isPlainDateValue = (value: string) =>
+  !value || /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+const DateOrTextField = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) => {
+  const [textMode, setTextMode] = useState(!isPlainDateValue(value));
+
+  return (
+    <div className="date-or-text-field">
+      {textMode ? (
+        <input
+          type="text"
+          value={value}
+          placeholder="e.g. Lifetime, Permanent, N/A"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      ) : (
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )}
+
+      <button
+        type="button"
+        className="date-or-text-toggle"
+        title={
+          textMode ? "Switch to calendar date" : "No fixed date? Type text instead"
+        }
+        onClick={() => setTextMode((m) => !m)}
+      >
+        {textMode ? "📅" : "Aa"}
+      </button>
+    </div>
+  );
+};
+
 const RtaDocuments = () => {
   const [records, setRecords] = useState<RtaDocument[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -413,6 +461,10 @@ const formatDate = (date: string) => {
 
   const d = new Date(date);
 
+  // Free text (e.g. "Lifetime", "N/A") isn't a parseable date - show it
+  // as-is instead of "NaN-NaN-NaN".
+  if (isNaN(d.getTime())) return date;
+
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = d.getFullYear();
@@ -433,6 +485,17 @@ const getExpiryBadge = (date: string) => {
   today.setHours(0, 0, 0, 0);
 
   const expiry = new Date(date);
+
+  // Free text entry (no fixed expiry, e.g. "Lifetime") - show the text
+  // itself with a neutral badge instead of computing a day-count.
+  if (isNaN(expiry.getTime())) {
+    return {
+      className: "badge-gray",
+      text: date,
+      days: "",
+    };
+  }
+
   expiry.setHours(0, 0, 0, 0);
 
   const diffDays = Math.ceil(
@@ -478,6 +541,16 @@ const getVehicleAge = (date: string) => {
   }
 
   const regDate = new Date(date);
+
+  // Free text entry - nothing to calculate an age from, just show it.
+  if (isNaN(regDate.getTime())) {
+    return {
+      className: "age-gray",
+      text: date,
+      years: null as number | null,
+    };
+  }
+
   const today = new Date();
 
   let years = today.getFullYear() - regDate.getFullYear();
@@ -516,6 +589,11 @@ const getExpiryStatus = (date: string): string => {
   today.setHours(0, 0, 0, 0);
 
   const expiry = new Date(date);
+
+  // Free text (e.g. "Lifetime") - bucket separately from truly blank so
+  // it can still be filtered on, without pretending to have a real date.
+  if (isNaN(expiry.getTime())) return "No Expiry Date (Text)";
+
   expiry.setHours(0, 0, 0, 0);
 
   const diffDays = Math.ceil(
@@ -532,6 +610,9 @@ const getAgeStatus = (date: string): string => {
   if (!date) return "Unknown";
 
   const regDate = new Date(date);
+
+  if (isNaN(regDate.getTime())) return "No Expiry Date (Text)";
+
   const today = new Date();
 
   let years = today.getFullYear() - regDate.getFullYear();
@@ -558,6 +639,7 @@ const EXPIRY_STATUS_COLORS: Record<string, string> = {
   "Expiring Soon": "#f59e0b",
   "Valid": "#16a34a",
   "No Date": "#9ca3af",
+  "No Expiry Date (Text)": "#9ca3af",
 };
 
 const AGE_STATUS_COLORS: Record<string, string> = {
@@ -565,6 +647,7 @@ const AGE_STATUS_COLORS: Record<string, string> = {
   "10-15 Years": "#f59e0b",
   "Over 15 Years": "#dc2626",
   "Unknown": "#9ca3af",
+  "No Expiry Date (Text)": "#9ca3af",
 };
 
 // Feed the *searched* rows in, not the raw list, so the Excel-style
@@ -832,13 +915,12 @@ cardRecords.forEach((item) => {
           <div className="form-group">
             <label>Registration Date</label>
 
-            <input
-              type="date"
+            <DateOrTextField
               value={formData.registrationDate}
-              onChange={(e) =>
+              onChange={(v) =>
                 setFormData({
                   ...formData,
-                  registrationDate: e.target.value,
+                  registrationDate: v,
                 })
               }
             />
@@ -847,13 +929,12 @@ cardRecords.forEach((item) => {
           <div className="form-group">
             <label>Insurance Expiry</label>
 
-            <input
-              type="date"
+            <DateOrTextField
               value={formData.insuranceExpiry}
-              onChange={(e) =>
+              onChange={(v) =>
                 setFormData({
                   ...formData,
-                  insuranceExpiry: e.target.value,
+                  insuranceExpiry: v,
                 })
               }
             />
@@ -862,13 +943,12 @@ cardRecords.forEach((item) => {
           <div className="form-group">
             <label>Fitness Expiry</label>
 
-            <input
-              type="date"
+            <DateOrTextField
               value={formData.fitnessExpiry}
-              onChange={(e) =>
+              onChange={(v) =>
                 setFormData({
                   ...formData,
-                  fitnessExpiry: e.target.value,
+                  fitnessExpiry: v,
                 })
               }
             />
@@ -877,13 +957,12 @@ cardRecords.forEach((item) => {
           <div className="form-group">
             <label>Permit Expiry</label>
 
-            <input
-              type="date"
+            <DateOrTextField
               value={formData.permitExpiry}
-              onChange={(e) =>
+              onChange={(v) =>
                 setFormData({
                   ...formData,
-                  permitExpiry: e.target.value,
+                  permitExpiry: v,
                 })
               }
             />
@@ -892,13 +971,12 @@ cardRecords.forEach((item) => {
           <div className="form-group">
             <label>Pollution Expiry</label>
 
-            <input
-              type="date"
+            <DateOrTextField
               value={formData.pollutionExpiry}
-              onChange={(e) =>
+              onChange={(v) =>
                 setFormData({
                   ...formData,
-                  pollutionExpiry: e.target.value,
+                  pollutionExpiry: v,
                 })
               }
             />
@@ -907,13 +985,12 @@ cardRecords.forEach((item) => {
           <div className="form-group">
             <label>Road Tax Expiry</label>
 
-            <input
-              type="date"
+            <DateOrTextField
               value={formData.taxExpiry}
-              onChange={(e) =>
+              onChange={(v) =>
                 setFormData({
                   ...formData,
-                  taxExpiry: e.target.value,
+                  taxExpiry: v,
                 })
               }
             />
@@ -922,6 +999,7 @@ cardRecords.forEach((item) => {
         </div>
       </div>
             {/* ================= REMARKS ================= */}
+
 
       <div className="form-card">
         <h2 className="section-title">Remarks</h2>

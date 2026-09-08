@@ -299,6 +299,34 @@
   min-height: 80px;
 }
 
+/* Registration/expiry fields that can hold either a real calendar date
+   or free text like "Lifetime"/"N/A" (see DateOrTextField). */
+.date-or-text-field {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.date-or-text-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+.date-or-text-toggle {
+  flex-shrink: 0;
+  width: 38px;
+  border: 1px solid var(--border-soft, #e4dcc8);
+  border-radius: 6px;
+  background: #f5f1e6;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.date-or-text-toggle:hover {
+  background: #ece5d3;
+}
+
 /* ---------- Buttons ---------- */
 
 .button-group {
