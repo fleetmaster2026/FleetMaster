@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaTimes, FaTruck, FaEdit } from "react-icons/fa";
 import type { Vehicle } from "../types/Vehicle";
+import { getAgeStatus } from "../utils/vehicleAge";
 
 import {
   getVehicles,
@@ -52,6 +53,7 @@ const vehicleColumns: ColumnDef<Vehicle>[] = [
 // Remarks & Action) and the "which columns to print" checklist.
 const vehicleToolbarColumns: ToolbarColumn[] = [
   { key: "owner", label: "Owner" },
+  { key: "vehicleAge", label: "Vehicle Age" },
   { key: "vehicleNo", label: "Vehicle No" },
   { key: "vehicleName", label: "Vehicle Name" },
   { key: "vehicleType", label: "Vehicle Type" },
@@ -125,7 +127,16 @@ const VehicleMaster = () => {
   // Feed the *searched* rows in, not the raw list, so the Excel-style
   // filter dropdowns only offer values that are actually present in the
   // current search results instead of the whole unfiltered dataset.
-  const columnFilters = useColumnFilters(searchedVehicles);
+  // Also attaches a filterable "vehicleAge" category (derived from
+  // Registration Date) so the funnel filter on that column can offer
+  // "Under 10 Years" / "10-15 Years" / "Over 15 Years" etc. instead of
+  // needing an exact date match.
+  const vehiclesWithAge = searchedVehicles.map((v) => ({
+    ...v,
+    vehicleAge: getAgeStatus(v.registrationDate),
+  }));
+
+  const columnFilters = useColumnFilters(vehiclesWithAge);
 
 const loadData = async () => {
   try {
@@ -290,7 +301,7 @@ useEffect(() => {
     }
   };
 
-  const filteredVehicles = columnFilters.applyFilters(searchedVehicles);
+  const filteredVehicles = columnFilters.applyFilters(vehiclesWithAge);
 
   return (
     <div className="page-container">

@@ -13,6 +13,11 @@ import {
 } from "../services/rtaDocumentApi";
 
 import { getVehicles } from "../services/vehicleApi";
+import {
+  getVehicleAge,
+  getAgeStatus,
+  AGE_STATUS_COLORS,
+} from "../utils/vehicleAge";
 
 import {
   FaSave,
@@ -527,57 +532,9 @@ return {
 };
 
 // ================= VEHICLE AGE =================
-// Auto-calculated from Registration Date.
-// < 10 years  -> green
-// 10-15 years -> orange
-// > 15 years  -> red
-const getVehicleAge = (date: string) => {
-  if (!date) {
-    return {
-      className: "age-gray",
-      text: "-",
-      years: null as number | null,
-    };
-  }
-
-  const regDate = new Date(date);
-
-  // Free text entry - nothing to calculate an age from, just show it.
-  if (isNaN(regDate.getTime())) {
-    return {
-      className: "age-gray",
-      text: date,
-      years: null as number | null,
-    };
-  }
-
-  const today = new Date();
-
-  let years = today.getFullYear() - regDate.getFullYear();
-  const monthDiff = today.getMonth() - regDate.getMonth();
-
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < regDate.getDate())
-  ) {
-    years--;
-  }
-
-  if (years < 0) years = 0;
-
-  let className = "age-green";
-  if (years > 15) {
-    className = "age-red";
-  } else if (years >= 10) {
-    className = "age-orange";
-  }
-
-  return {
-    className,
-    text: `${years} ${years === 1 ? "Year" : "Years"}`,
-    years,
-  };
-};
+// getVehicleAge / getAgeStatus / AGE_STATUS_COLORS now live in
+// ../utils/vehicleAge so Vehicle Master can use the exact same rules -
+// see the import at the top of this file.
 
 // Same thresholds as getExpiryBadge, but returns just the status category
 // so it can be used as a filterable value ("Expired" / "Expiring Soon" /
@@ -605,33 +562,6 @@ const getExpiryStatus = (date: string): string => {
   return "Valid";
 };
 
-// Same thresholds as getVehicleAge, returned as a filterable category.
-const getAgeStatus = (date: string): string => {
-  if (!date) return "Unknown";
-
-  const regDate = new Date(date);
-
-  if (isNaN(regDate.getTime())) return "No Expiry Date (Text)";
-
-  const today = new Date();
-
-  let years = today.getFullYear() - regDate.getFullYear();
-  const monthDiff = today.getMonth() - regDate.getMonth();
-
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < regDate.getDate())
-  ) {
-    years--;
-  }
-
-  if (years < 0) years = 0;
-
-  if (years > 15) return "Over 15 Years";
-  if (years >= 10) return "10-15 Years";
-  return "Under 10 Years";
-};
-
 // Colour dots shown next to each option in the funnel dropdown, matching
 // the badge colours used in the table cells themselves.
 const EXPIRY_STATUS_COLORS: Record<string, string> = {
@@ -639,14 +569,6 @@ const EXPIRY_STATUS_COLORS: Record<string, string> = {
   "Expiring Soon": "#f59e0b",
   "Valid": "#16a34a",
   "No Date": "#9ca3af",
-  "No Expiry Date (Text)": "#9ca3af",
-};
-
-const AGE_STATUS_COLORS: Record<string, string> = {
-  "Under 10 Years": "#16a34a",
-  "10-15 Years": "#f59e0b",
-  "Over 15 Years": "#dc2626",
-  "Unknown": "#9ca3af",
   "No Expiry Date (Text)": "#9ca3af",
 };
 
