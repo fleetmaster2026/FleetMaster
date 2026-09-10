@@ -30,7 +30,14 @@ const app = express();
 // Middlewares
 // =========================
 app.use(cors());
-app.use(express.json());
+
+// Default express.json() body limit is 100kb, which a bulk Excel import
+// of a large fleet (hundreds of vehicles/RTA records as one JSON array)
+// can easily exceed - Express then rejects the request with a 413 before
+// it reaches any route handler, and since that error response isn't JSON,
+// the frontend's res.json() parsing fails too, surfacing only as a
+// generic "Unable to Import Excel File" alert with no real explanation.
+app.use(express.json({ limit: "25mb" }));
 
 // Serve uploaded files
 app.use(

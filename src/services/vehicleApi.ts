@@ -71,8 +71,25 @@ export const bulkReplaceVehicles = async (
   });
 
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(body.error || "Failed to import vehicles");
+    // A body that isn't valid JSON (e.g. a 413 Payload Too Large error
+    // page from Express, or a Render/host-level error page) previously
+    // surfaced only as a generic "Unable to Import Excel File" alert
+    // with no indication of what actually happened.
+    let message = `Import failed (HTTP ${response.status}).`;
+
+    try {
+      const body = await response.json();
+      if (body?.error) message = body.error;
+    } catch {
+      if (response.status === 413) {
+        message =
+          "Import failed: the file is too large for the server to accept in one request.";
+      } else if (response.statusText) {
+        message = `Import failed (HTTP ${response.status} ${response.statusText}).`;
+      }
+    }
+
+    throw new Error(message);
   }
 
   return response.json();

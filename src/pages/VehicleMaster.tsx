@@ -284,7 +284,9 @@ useEffect(() => {
       );
     } catch (error) {
       console.error(error);
-      alert("Unable to Import Excel File");
+      const message =
+        error instanceof Error ? error.message : "Unable to Import Excel File";
+      alert(message);
     }
   };
 
